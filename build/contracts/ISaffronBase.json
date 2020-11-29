@@ -1,0 +1,515 @@
+{
+  "contractName": "ISaffronBase",
+  "abi": [],
+  "metadata": "{\"compiler\":{\"version\":\"0.7.4+commit.3f05b770\"},\"language\":\"Solidity\",\"output\":{\"abi\":[],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"/home/joey/Documents/joey/saffron/git/github.com/saffron-finance/epoch1-recovery/contracts/interfaces/ISaffronBase.sol\":\"ISaffronBase\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":999999},\"remappings\":[]},\"sources\":{\"/home/joey/Documents/joey/saffron/git/github.com/saffron-finance/epoch1-recovery/contracts/interfaces/ISaffronBase.sol\":{\"keccak256\":\"0x73f22473e20f926f0ca11fb92aac55da76fe47b02daf4bf058b58ca2a8328d99\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://9754d5e898167e0deea4ac9d264b64d09d8d9ab1e9342125ce6daef268c502cc\",\"dweb:/ipfs/Qmco8FUpCkfJ3Hih9aw6RhExJFnumycarwZ7a4dmTtjvf9\"]}},\"version\":1}",
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "immutableReferences": {},
+  "generatedSources": [],
+  "deployedGeneratedSources": [],
+  "sourceMap": "",
+  "deployedSourceMap": "",
+  "source": "// SPDX-License-Identifier: MIT\n\npragma solidity ^0.7.1;\n\ninterface ISaffronBase {\n  enum Tranche {S, AA, A}\n  enum LPTokenType {dsec, principal}\n\n  // Store values (balances, dsec, vdsec) with TrancheUint256\n  struct TrancheUint256 {\n    uint256 S;\n    uint256 AA;\n    uint256 A;\n  }\n\n  struct epoch_params {\n    uint256 start_date;       // Time when the platform launched\n    uint256 duration;         // Duration of epoch\n  }\n}\n",
+  "sourcePath": "/home/joey/Documents/joey/saffron/git/github.com/saffron-finance/epoch1-recovery/contracts/interfaces/ISaffronBase.sol",
+  "ast": {
+    "absolutePath": "/home/joey/Documents/joey/saffron/git/github.com/saffron-finance/epoch1-recovery/contracts/interfaces/ISaffronBase.sol",
+    "exportedSymbols": {
+      "ISaffronBase": [
+        415
+      ]
+    },
+    "id": 416,
+    "license": "MIT",
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 395,
+        "literals": [
+          "solidity",
+          "^",
+          "0.7",
+          ".1"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "33:23:2"
+      },
+      {
+        "abstract": false,
+        "baseContracts": [],
+        "contractDependencies": [],
+        "contractKind": "interface",
+        "fullyImplemented": true,
+        "id": 415,
+        "linearizedBaseContracts": [
+          415
+        ],
+        "name": "ISaffronBase",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "canonicalName": "ISaffronBase.Tranche",
+            "id": 399,
+            "members": [
+              {
+                "id": 396,
+                "name": "S",
+                "nodeType": "EnumValue",
+                "src": "99:1:2"
+              },
+              {
+                "id": 397,
+                "name": "AA",
+                "nodeType": "EnumValue",
+                "src": "102:2:2"
+              },
+              {
+                "id": 398,
+                "name": "A",
+                "nodeType": "EnumValue",
+                "src": "106:1:2"
+              }
+            ],
+            "name": "Tranche",
+            "nodeType": "EnumDefinition",
+            "src": "85:23:2"
+          },
+          {
+            "canonicalName": "ISaffronBase.LPTokenType",
+            "id": 402,
+            "members": [
+              {
+                "id": 400,
+                "name": "dsec",
+                "nodeType": "EnumValue",
+                "src": "129:4:2"
+              },
+              {
+                "id": 401,
+                "name": "principal",
+                "nodeType": "EnumValue",
+                "src": "135:9:2"
+              }
+            ],
+            "name": "LPTokenType",
+            "nodeType": "EnumDefinition",
+            "src": "111:34:2"
+          },
+          {
+            "canonicalName": "ISaffronBase.TrancheUint256",
+            "id": 409,
+            "members": [
+              {
+                "constant": false,
+                "id": 404,
+                "mutability": "mutable",
+                "name": "S",
+                "nodeType": "VariableDeclaration",
+                "scope": 409,
+                "src": "239:9:2",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_uint256",
+                  "typeString": "uint256"
+                },
+                "typeName": {
+                  "id": 403,
+                  "name": "uint256",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "239:7:2",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 406,
+                "mutability": "mutable",
+                "name": "AA",
+                "nodeType": "VariableDeclaration",
+                "scope": 409,
+                "src": "254:10:2",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_uint256",
+                  "typeString": "uint256"
+                },
+                "typeName": {
+                  "id": 405,
+                  "name": "uint256",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "254:7:2",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 408,
+                "mutability": "mutable",
+                "name": "A",
+                "nodeType": "VariableDeclaration",
+                "scope": 409,
+                "src": "270:9:2",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_uint256",
+                  "typeString": "uint256"
+                },
+                "typeName": {
+                  "id": 407,
+                  "name": "uint256",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "270:7:2",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  }
+                },
+                "visibility": "internal"
+              }
+            ],
+            "name": "TrancheUint256",
+            "nodeType": "StructDefinition",
+            "scope": 415,
+            "src": "211:73:2",
+            "visibility": "public"
+          },
+          {
+            "canonicalName": "ISaffronBase.epoch_params",
+            "id": 414,
+            "members": [
+              {
+                "constant": false,
+                "id": 411,
+                "mutability": "mutable",
+                "name": "start_date",
+                "nodeType": "VariableDeclaration",
+                "scope": 414,
+                "src": "314:18:2",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_uint256",
+                  "typeString": "uint256"
+                },
+                "typeName": {
+                  "id": 410,
+                  "name": "uint256",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "314:7:2",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 413,
+                "mutability": "mutable",
+                "name": "duration",
+                "nodeType": "VariableDeclaration",
+                "scope": 414,
+                "src": "379:16:2",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_uint256",
+                  "typeString": "uint256"
+                },
+                "typeName": {
+                  "id": 412,
+                  "name": "uint256",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "379:7:2",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  }
+                },
+                "visibility": "internal"
+              }
+            ],
+            "name": "epoch_params",
+            "nodeType": "StructDefinition",
+            "scope": 415,
+            "src": "288:141:2",
+            "visibility": "public"
+          }
+        ],
+        "scope": 416,
+        "src": "58:373:2"
+      }
+    ],
+    "src": "33:399:2"
+  },
+  "legacyAST": {
+    "absolutePath": "/home/joey/Documents/joey/saffron/git/github.com/saffron-finance/epoch1-recovery/contracts/interfaces/ISaffronBase.sol",
+    "exportedSymbols": {
+      "ISaffronBase": [
+        415
+      ]
+    },
+    "id": 416,
+    "license": "MIT",
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 395,
+        "literals": [
+          "solidity",
+          "^",
+          "0.7",
+          ".1"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "33:23:2"
+      },
+      {
+        "abstract": false,
+        "baseContracts": [],
+        "contractDependencies": [],
+        "contractKind": "interface",
+        "fullyImplemented": true,
+        "id": 415,
+        "linearizedBaseContracts": [
+          415
+        ],
+        "name": "ISaffronBase",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "canonicalName": "ISaffronBase.Tranche",
+            "id": 399,
+            "members": [
+              {
+                "id": 396,
+                "name": "S",
+                "nodeType": "EnumValue",
+                "src": "99:1:2"
+              },
+              {
+                "id": 397,
+                "name": "AA",
+                "nodeType": "EnumValue",
+                "src": "102:2:2"
+              },
+              {
+                "id": 398,
+                "name": "A",
+                "nodeType": "EnumValue",
+                "src": "106:1:2"
+              }
+            ],
+            "name": "Tranche",
+            "nodeType": "EnumDefinition",
+            "src": "85:23:2"
+          },
+          {
+            "canonicalName": "ISaffronBase.LPTokenType",
+            "id": 402,
+            "members": [
+              {
+                "id": 400,
+                "name": "dsec",
+                "nodeType": "EnumValue",
+                "src": "129:4:2"
+              },
+              {
+                "id": 401,
+                "name": "principal",
+                "nodeType": "EnumValue",
+                "src": "135:9:2"
+              }
+            ],
+            "name": "LPTokenType",
+            "nodeType": "EnumDefinition",
+            "src": "111:34:2"
+          },
+          {
+            "canonicalName": "ISaffronBase.TrancheUint256",
+            "id": 409,
+            "members": [
+              {
+                "constant": false,
+                "id": 404,
+                "mutability": "mutable",
+                "name": "S",
+                "nodeType": "VariableDeclaration",
+                "scope": 409,
+                "src": "239:9:2",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_uint256",
+                  "typeString": "uint256"
+                },
+                "typeName": {
+                  "id": 403,
+                  "name": "uint256",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "239:7:2",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 406,
+                "mutability": "mutable",
+                "name": "AA",
+                "nodeType": "VariableDeclaration",
+                "scope": 409,
+                "src": "254:10:2",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_uint256",
+                  "typeString": "uint256"
+                },
+                "typeName": {
+                  "id": 405,
+                  "name": "uint256",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "254:7:2",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 408,
+                "mutability": "mutable",
+                "name": "A",
+                "nodeType": "VariableDeclaration",
+                "scope": 409,
+                "src": "270:9:2",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_uint256",
+                  "typeString": "uint256"
+                },
+                "typeName": {
+                  "id": 407,
+                  "name": "uint256",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "270:7:2",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  }
+                },
+                "visibility": "internal"
+              }
+            ],
+            "name": "TrancheUint256",
+            "nodeType": "StructDefinition",
+            "scope": 415,
+            "src": "211:73:2",
+            "visibility": "public"
+          },
+          {
+            "canonicalName": "ISaffronBase.epoch_params",
+            "id": 414,
+            "members": [
+              {
+                "constant": false,
+                "id": 411,
+                "mutability": "mutable",
+                "name": "start_date",
+                "nodeType": "VariableDeclaration",
+                "scope": 414,
+                "src": "314:18:2",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_uint256",
+                  "typeString": "uint256"
+                },
+                "typeName": {
+                  "id": 410,
+                  "name": "uint256",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "314:7:2",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 413,
+                "mutability": "mutable",
+                "name": "duration",
+                "nodeType": "VariableDeclaration",
+                "scope": 414,
+                "src": "379:16:2",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_uint256",
+                  "typeString": "uint256"
+                },
+                "typeName": {
+                  "id": 412,
+                  "name": "uint256",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "379:7:2",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  }
+                },
+                "visibility": "internal"
+              }
+            ],
+            "name": "epoch_params",
+            "nodeType": "StructDefinition",
+            "scope": 415,
+            "src": "288:141:2",
+            "visibility": "public"
+          }
+        ],
+        "scope": 416,
+        "src": "58:373:2"
+      }
+    ],
+    "src": "33:399:2"
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.7.4+commit.3f05b770.Emscripten.clang"
+  },
+  "networks": {},
+  "schemaVersion": "3.3.2",
+  "updatedAt": "2020-11-29T21:55:11.731Z",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  }
+}
