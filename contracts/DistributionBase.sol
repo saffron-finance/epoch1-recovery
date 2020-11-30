@@ -15,6 +15,7 @@ contract DistributionBase {
   bool public deposit_done;
 
   address public governance;
+  address public fund_rescue;
 
   // Existing on-chain contracts
   IERC20 public underlying_token;
@@ -37,8 +38,8 @@ contract DistributionBase {
   }
 
   modifier onlyGovernance() {
-  	require(msg.sender == governance, "only governance is allowed");
-  	_;
+    require(msg.sender == governance, "only governance is allowed");
+    _;
   }
 
   function redeem() public {
@@ -56,7 +57,17 @@ contract DistributionBase {
     redeem_allowed = true;
   }
 
-  function depositFund() public {
+  modifier onlyFundRescue() {
+    require(msg.sender == fund_rescue, "only fund rescue is allowed");
+    _;
+  }
+
+  function setFundRescue(address _fund_rescue) public onlyGovernance {
+    require(fund_rescue != address(0x0));
+    fund_rescue = _fund_rescue;
+  }
+
+  function depositFund() public onlyFundRescue {
     underlying_token.safeTransferFrom(msg.sender, address(this), total_distribution_amount);
     deposit_done = true;
   }
