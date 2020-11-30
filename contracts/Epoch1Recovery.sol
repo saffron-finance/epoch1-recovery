@@ -6,7 +6,6 @@ import "./interfaces/ISaffronPool.sol";
 import "./interfaces/ISaffronAdapter.sol";
 import "./lib/SafeMath.sol";
 import "./lib/IERC20.sol";
-//import "./lib/ERC20.sol";
 import "./lib/SafeERC20.sol";
 
 contract Epoch1Recovery {
@@ -16,9 +15,6 @@ contract Epoch1Recovery {
   address public governance;
 
   // Existing on-chain contracts
-  ISaffronPool public constant DAI_POOL = ISaffronPool(0x70D8682DDdD33571722D14aa327049DaD869AEE9); // https://etherscan.io/address/0x70d8682dddd33571722d14aa327049dad869aee9
-  ISaffronPool public constant UNI_POOL = ISaffronPool(0x69ec762faacD5B95eD19E99233E2B5176B366aa3); // https://etherscan.io/address/0x69ec762faacD5B95eD19E99233E2B5176B366aa3
-
   IERC20 public constant DAI = IERC20(0x6B175474E89094C44Da98b954EedeAC495271d0F);
   IERC20 public constant SFI = IERC20(0xb753428af26E81097e7fD17f40c88aaA3E04902c);
   IERC20 public constant UNI = IERC20(0xC76225124F3CaAb07f609b1D147a31de43926cd6);
@@ -42,12 +38,13 @@ contract Epoch1Recovery {
 
   bool public ratios_set;
 
-  // Constant earnings (epoch 1 wound down already):
+  // Constant earnings and principal amounts (epoch 1 wound down already):
   uint256 public constant S_INTEREST_EARNED = 38577996099131004531621;
+  uint256 public constant S_PRINCIPAL_AMOUNT = 51029966983206580100000000;
   uint256 public constant A_INTEREST_EARNED = 47795853357341105935610;
-  uint256 public constant S_SFI_EARNED = 10687500000000000000000;
-  uint256 public constant A_SFI_EARNED = 562500000000000000000;
+  uint256 public constant A_PRINCIPAL_AMOUNT = 4239020891056530000000000;
   uint256 public constant UNI_SFI_EARNED = 3750000000000000000000; 
+  uint256 public constant UNI_PRINCIPAL_AMOUNT = 4217195425373693533612;
 
   constructor() {
     for (uint256 i = 0; i < lp_token_addresses.length; i++) {
