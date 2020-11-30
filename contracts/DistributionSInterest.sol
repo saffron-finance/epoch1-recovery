@@ -1,4 +1,4 @@
-
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.7.1;
 
@@ -10,7 +10,7 @@ contract DistributionSInterest is DistributionBase {
   address public lp_token_address = 0x372Bc201134676c846F1fd07a2a059Fd18526De3;
   uint256 public S_INTEREST_EARNED = 38577996099131004531621;
 
-  constructor() public DistributionBase(DAI, lp_token_address, S_INTEREST_EARNED) {
+  constructor() DistributionBase(DAI, lp_token_address, S_INTEREST_EARNED) {
 
   }
 

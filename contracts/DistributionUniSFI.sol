@@ -1,4 +1,4 @@
-
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.7.1;
 
@@ -10,7 +10,7 @@ contract DistributionUniSFI is DistributionBase {
   address public lp_token_address = 0x19e5a60c1646c921aC592409548d1bCe5B071Faa;
   uint256 public UNI_SFI_EARNED = 3750000000000000000000;
 
-  constructor() public DistributionBase(SFI, lp_token_address, UNI_SFI_EARNED) {
+  constructor() DistributionBase(SFI, lp_token_address, UNI_SFI_EARNED) {
 
   }
 

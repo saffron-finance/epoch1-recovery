@@ -13,9 +13,10 @@ interface DistributionContract {
 }
 
 contract FundRescue {
-
   using SafeERC20 for IERC20;
   using SafeMath for uint256;
+
+  address public governance;
 
   address public adapter = 0xe158fA2595b4745CA73cB49D3caCDA3BE523AB98;
 
@@ -26,12 +27,12 @@ contract FundRescue {
   address public cDAI = 0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643;
 
   // Distribution contracts to be deployed later
-  address public distribution_contract_s_dsec =   0x0000000000000000000000000000000000000000; // S dsec      
-  address public distribution_contract_s_principal =   0x0000000000000000000000000000000000000000; // S principal
-  address public distribution_contract_a_dsec =   0x0000000000000000000000000000000000000000; // A dsec 
-  address public distribution_contract_a_principal =   0x0000000000000000000000000000000000000000; // A principal
-  address public distribution_contract_uni_dsec =   0x0000000000000000000000000000000000000000; // UNI dsec
-  address public distribution_contract_uni_principal =   0x0000000000000000000000000000000000000000; // UNI principal
+  address public distribution_contract_s_dsec;        // S dsec
+  address public distribution_contract_s_principal;   // S principal
+  address public distribution_contract_a_dsec;        // A dsec
+  address public distribution_contract_a_principal;   // A principal
+  address public distribution_contract_uni_dsec;      // UNI dsec
+  address public distribution_contract_uni_principal; // UNI principal
 
   // Constant earnings and principal amounts (epoch 1 wound down already):
   uint256 public constant S_INTEREST_EARNED = 38577996099131004531621;
@@ -42,7 +43,13 @@ contract FundRescue {
   uint256 public constant UNI_SFI_EARNED = 3750000000000000000000; 
   uint256 public constant UNI_PRINCIPAL_AMOUNT = 4217195425373693533612;
 
-  constructor() public {
+  constructor(address _distribution_contract_s_dsec, address _distribution_contract_s_principal, address _distribution_contract_a_dsec, address _distribution_contract_a_principal, address _distribution_contract_uni_dsec, address _distribution_contract_uni_principal) {
+    distribution_contract_s_dsec = _distribution_contract_s_dsec;
+    distribution_contract_s_principal = _distribution_contract_s_principal;
+    distribution_contract_a_dsec = _distribution_contract_a_dsec;
+    distribution_contract_a_principal = _distribution_contract_a_principal;
+    distribution_contract_uni_dsec = _distribution_contract_uni_dsec;
+    distribution_contract_uni_principal = _distribution_contract_uni_principal;
     governance = msg.sender;
   }
 

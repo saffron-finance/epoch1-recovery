@@ -5,8 +5,9 @@ pragma solidity ^0.7.1;
 import "./lib/SafeMath.sol";
 import "./lib/IERC20.sol";
 import "./lib/SafeERC20.sol";
+import "./interfaces/IDistributionBase.sol";
 
-contract DistributionBase {
+contract DistributionBase is IDistributionBase {
 
   using SafeERC20 for IERC20;
   using SafeMath for uint256;
@@ -43,7 +44,7 @@ contract DistributionBase {
   }
 
   function redeem() public {
-    require(redeem_allowed, "redeem not allowed yet")
+    require(redeem_allowed, "redeem not allowed yet");
 
     uint user_balance = lp_token.balanceOf(msg.sender);
     uint user_share = user_balance.mul(total_distribution_amount).div(lp_token.totalSupply());
@@ -76,6 +77,10 @@ contract DistributionBase {
     IERC20 tkn = IERC20(_token);
     uint256 tBal = tkn.balanceOf(address(this));
     tkn.safeTransfer(_to, tBal);
+  }
+
+  function get_fund_rescue() external view override returns(address) {
+    return fund_rescue;
   }
 }
 

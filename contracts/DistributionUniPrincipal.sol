@@ -1,4 +1,4 @@
-
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.7.1;
 
@@ -10,7 +10,7 @@ contract DistributionUniPrincipal is DistributionBase {
   address public lp_token_address = 0x87c4a23A15E2442422E5e43d08cEEF7D1F32792d;
   uint256 public UNI_PRINCIPAL_AMOUNT = 4217195425373693533612;
 
-  constructor() public DistributionBase(UNI, lp_token_address, UNI_PRINCIPAL_AMOUNT) {
+  constructor() DistributionBase(UNI, lp_token_address, UNI_PRINCIPAL_AMOUNT) {
 
   }
 
