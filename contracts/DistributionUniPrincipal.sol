@@ -4,7 +4,7 @@ pragma solidity ^0.7.1;
 
 import "./DistributionBase.sol";
 
-contract DistributionUniPrincipal {
+contract DistributionUniPrincipal is DistributionBase {
   
   address public UNI = 0xC76225124F3CaAb07f609b1D147a31de43926cd6;
   address public lp_token_address = 0x87c4a23A15E2442422E5e43d08cEEF7D1F32792d;
