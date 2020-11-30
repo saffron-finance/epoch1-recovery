@@ -34,7 +34,8 @@ module.exports = {
     "principal_S": "0x9be973b1496E28b3b745742391B0E5977184f1AC",
     "principal_A": "0x8364Cf2bc1504e05EfEd9b92Ee903b642B6f3Fb5",
     "dsec_UNI": "0x19e5a60c1646c921aC592409548d1bCe5B071Faa",
-    "principal_UNI": "0x87c4a23A15E2442422E5e43d08cEEF7D1F32792d"
+    "principal_UNI": "0x87c4a23A15E2442422E5e43d08cEEF7D1F32792d",
+    "DAI_Compound_Adapter": "0xe158fA2595b4745CA73cB49D3caCDA3BE523AB98"
   },
   "mainnet-fork": {
     "DAI": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
@@ -50,7 +51,8 @@ module.exports = {
     "principal_S": "0x9be973b1496E28b3b745742391B0E5977184f1AC",
     "principal_A": "0x8364Cf2bc1504e05EfEd9b92Ee903b642B6f3Fb5",
     "dsec_UNI": "0x19e5a60c1646c921aC592409548d1bCe5B071Faa",
-    "principal_UNI": "0x87c4a23A15E2442422E5e43d08cEEF7D1F32792d"
+    "principal_UNI": "0x87c4a23A15E2442422E5e43d08cEEF7D1F32792d",
+    "DAI_Compound_Adapter": "0xe158fA2595b4745CA73cB49D3caCDA3BE523AB98"
   },
   "development": { //mainnet fork for ganache state
     "DAI": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
@@ -66,7 +68,8 @@ module.exports = {
     "principal_S": "0x9be973b1496E28b3b745742391B0E5977184f1AC",
     "principal_A": "0x8364Cf2bc1504e05EfEd9b92Ee903b642B6f3Fb5",
     "dsec_UNI": "0x19e5a60c1646c921aC592409548d1bCe5B071Faa",
-    "principal_UNI": "0x87c4a23A15E2442422E5e43d08cEEF7D1F32792d"
+    "principal_UNI": "0x87c4a23A15E2442422E5e43d08cEEF7D1F32792d",
+    "DAI_Compound_Adapter": "0xe158fA2595b4745CA73cB49D3caCDA3BE523AB98"
   },
   "development-fork": { //hack
     "DAI": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
@@ -82,6 +85,7 @@ module.exports = {
     "principal_S": "0x9be973b1496E28b3b745742391B0E5977184f1AC",
     "principal_A": "0x8364Cf2bc1504e05EfEd9b92Ee903b642B6f3Fb5",
     "dsec_UNI": "0x19e5a60c1646c921aC592409548d1bCe5B071Faa",
-    "principal_UNI": "0x87c4a23A15E2442422E5e43d08cEEF7D1F32792d"
+    "principal_UNI": "0x87c4a23A15E2442422E5e43d08cEEF7D1F32792d",
+    "DAI_Compound_Adapter": "0xe158fA2595b4745CA73cB49D3caCDA3BE523AB98"
   },
 }

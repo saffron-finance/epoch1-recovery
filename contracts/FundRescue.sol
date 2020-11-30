@@ -24,7 +24,8 @@ contract FundRescue {
   IERC20 public  SFI = IERC20(0xb753428af26E81097e7fD17f40c88aaA3E04902c);
   IERC20 public  UNI = IERC20(0xC76225124F3CaAb07f609b1D147a31de43926cd6);
 
-  address public cDAI = 0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643;
+  ICErc20 private cDAI = ICErc20(0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643);
+  address public cDAI_address = 0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643;
 
   // Distribution contracts to be deployed later
   address public distribution_contract_s_dsec;        // S dsec
@@ -58,27 +59,43 @@ contract FundRescue {
     _;
   }
 
-  function daiRescue() public onlyGovernance {
+  function redeemDai() public onlyGovernance {
     uint balanceOfDaiBefore = DAI.balanceOf(address(this));
-    IERC20(cDAI).safeTransferFrom(adapter, address(this), IERC20(cDAI).balanceOf(adapter));
 
-    uint c_balance = IERC20(cDAI).balanceOf(address(this));
-    uint result = ICErc20(cDAI).redeem(c_balance);
+    uint required_balance = balanceOfDaiBefore + S_INTEREST_EARNED + S_PRINCIPAL_AMOUNT + A_INTEREST_EARNED + A_PRINCIPAL_AMOUNT;
+    // Update COMP exchange rate to avoid MARKET_NOT_FRESH
+    uint rate = cDAI.exchangeRateCurrent();
+    require(rate > 0, "bad exchange rate");
+
+    uint c_balance = IERC20(cDAI_address).balanceOf(address(this));
+    require(c_balance > 0, "cDAI balance is 0");
+
+    uint result = cDAI.redeem(c_balance);
+    require(result != 1, "UNAUTHORIZED");
+    require(result != 2, "BAD_INPUT");
+    require(result != 3, "COMPTROLLER_REJECTION");
+    require(result != 4, "COMPTROLLER_CALCULATION_ERROR");
+    require(result != 5, "INTEREST_RATE_MODEL_ERROR");
+    require(result != 6, "INVALID_ACCOUNT_PAIR");
+    require(result != 7, "INVALID_CLOSE_AMOUNT_REQUESTED");
+    require(result != 8, "INVALID_COLLATERAL_FACTOR");
+    require(result != 9, "MATH_ERROR");
+    require(result != 10, "MARKET_NOT_FRESH");
+    require(result != 11, "MARKET_NOT_LISTED");
+    require(result != 12, "TOKEN_INSUFFICIENT_ALLOWANCE");
+    require(result != 13, "TOKEN_INSUFFICIENT_BALANCE");
+    require(result != 14, "TOKEN_INSUFFICIENT_CASH");
+    require(result != 15, "TOKEN_TRANSFER_IN_FAILED");
+    require(result != 16, "TOKEN_TRANSFER_OUT_FAILED");
     require(result == 0, "compound error");
     
     uint balanceOfDaiAfter = DAI.balanceOf(address(this));
-
-    uint required_balance = 
-      balanceOfDaiBefore + 
-      S_INTEREST_EARNED + 
-      S_PRINCIPAL_AMOUNT +
-      A_INTEREST_EARNED +
-      A_PRINCIPAL_AMOUNT;
 
   	require(balanceOfDaiAfter >= required_balance , "cDai wasn't converted or balance error");
   }
   
   function approveAndTransferFundsToDistributionContracts() public onlyGovernance {
+    require(DAI.balanceOf(address(this)) > S_INTEREST_EARNED + S_PRINCIPAL_AMOUNT + A_INTEREST_EARNED + A_PRINCIPAL_AMOUNT, "insufficient DAI for distribution");
 
     // S dsec (DAI interest earned)
     DAI.approve(distribution_contract_s_dsec, S_INTEREST_EARNED);

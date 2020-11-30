@@ -64,7 +64,7 @@ contract DistributionBase {
   }
 
   function setFundRescue(address _fund_rescue) public onlyGovernance {
-    require(fund_rescue != address(0x0));
+    require(_fund_rescue != address(0x0));
     fund_rescue = _fund_rescue;
   }
 
