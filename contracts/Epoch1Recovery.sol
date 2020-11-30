@@ -70,6 +70,7 @@ contract Epoch1Recovery {
   function set_ratios() public {
     require(msg.sender == governance);
     require(!ratios_set, "ratios already set");
+    ratios_set = true;
 
     // S tranche dsec/principal ratios
     DAI_ratio[0x372Bc201134676c846F1fd07a2a059Fd18526De3] = 830488116;
