@@ -6,7 +6,7 @@ import "./lib/SafeMath.sol";
 import "./lib/IERC20.sol";
 import "./lib/SafeERC20.sol";
 
-contract DistributionAInterest {
+contract DistributionBase {
 
   using SafeERC20 for IERC20;
   using SafeMath for uint256;
@@ -17,15 +17,20 @@ contract DistributionAInterest {
   address public governance;
 
   // Existing on-chain contracts
-  IERC20 public underlying_token = IERC20(/* address */ );
+  IERC20 public underlying_token;
+  IERC20 public lp_token;
 
+  uint256 public total_distribution_amount;
 
-  IERC20 public lp_token = IERC20(/* lp token address*/);
+  constructor(address _underlying_token, address _lp_token, uint _total_distribution_amount) {
+    require(_total_distribution_amount > 0);
+    require(_underlying_token != address(0x0));
+    require(_lp_token != address(0x0));
 
-  // Constant earnings and principal amounts (epoch 1 wound down already):
-  uint256 public constant total_distribution_amount = /* calculated value */;
-
-  constructor() {
+    underlying_token = IERC20( _underlying_token );
+    lp_token = IERC20( _lp_token);
+    total_distribution_amount = _total_distribution_amount;
+    
     governance = msg.sender;
     redeem_allowed = false;
     deposit_done = false;
@@ -40,7 +45,7 @@ contract DistributionAInterest {
     require(redeem_allowed, "redeem not allowed yet")
 
     uint user_balance = lp_token.balanceOf(msg.sender);
-    uint user_share = user_balance.mul(A_INTEREST_EARNED).div(lp_token.totalSupply());
+    uint user_share = user_balance.mul(total_distribution_amount).div(lp_token.totalSupply());
 
     lp_token.safeTransferFrom(msg.sender, 0x000000000000000000000000000000000000dEaD, user_balance);
     underlying_token.safeTransfer(msg.sender, user_share);
