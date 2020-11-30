@@ -73,7 +73,7 @@ contract FundRescue {
   
   function approveAndTransferFundsToDistributionContracts() public onlyGovernance {
 
-    // S dsec (interest earned)
+    // S dsec (DAI interest earned)
     DAI.approve(distribution_contract_s_dsec, S_INTEREST_EARNED);
     DistributionContract(distribution_contract_s_dsec).depositFund();
 
@@ -81,7 +81,7 @@ contract FundRescue {
     DAI.approve(distribution_contract_s_principal, S_PRINCIPAL_AMOUNT);
     DistributionContract(distribution_contract_s_principal).depositFund();
     
-    // A dsec (interest earned)
+    // A dsec (DAI interest earned)
     DAI.approve(distribution_contract_a_dsec, A_INTEREST_EARNED);
   	DistributionContract(distribution_contract_a_dsec).depositFund();
     
