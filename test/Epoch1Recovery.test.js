@@ -53,26 +53,37 @@ contract('Epoch1Recovery Test', function (accounts) {
   let sim = {};
 
   before(async function () {
+    if (network == 'development') {
+      // Simulated ERC20s for devnet
+      sim.DAI = await SimDAI.at(assets[network]["DAI"]);
+    }
+
+    // Saffron specific contracts
+    saffron.daiCompoundAdapter = await DAI_Compound_Adapter.at(assets[network]["DAI_Compound_Adapter"]);
+    saffron.UniPool = await SaffronUniswapLPPool.at(assets[network]["SaffronERC20StakingPool_Uniswap_SFI/ETH"]);
+    saffron.SFI = await ERC20.at(assets[network]["SFI"]);
+
+    // Non-Saffron contracts that live on the evm
+    evm.UNIV2 = await ERC20.at(assets[network]["SFI/ETH UniV2"]);
+    evm.DAI = await DAI.at(assets[network]["DAI"]);
+    evm.cDai = await ICErc20.at(assets[network]["cDAI"]);
+    evm.ERC20cDAI = await ERC20.at(assets[network]["cDAI"]);
+
     // prevent Compound from throwing "re-entered" exceptions
     // by requesting the current exchange rate before snapshot
-    sim.DAI = await SimDAI.at(assets[network]["DAI"]);
-
-    evm.cDai = await ICErc20.at(assets[network]["cDAI"]);
     await evm.cDai.exchangeRateCurrent();
-    evm.ERC20cDAI = await ERC20.at(assets[network]["cDAI"]);
-    saffron.daiCompoundAdapter = await DAI_Compound_Adapter.at(assets[network]["DAI_Compound_Adapter"]);
-
     snapshotIdPrimary = (await gtt.takeSnapshot())["result"];
-    evm.DAI = await DAI.at(assets[network]["DAI"]);
 
-    contracts.dsec_token_S = await dsec_S.at(assets[network]["dsec_S"]);
-    contracts.dsec_token_A = await dsec_A.at(assets[network]["dsec_A"]);
-    contracts.principal_token_S = await principal_S.at(assets[network]["principal_S"]);
-    contracts.principal_token_A = await principal_A.at(assets[network]["principal_A"]);
+    // Existing dsec and principal tokens
+    // TODO: Do we need to set these addresses in the Distribution* contracts when they're deployed?
+    saffron.dsec_token_S = await dsec_S.at(assets[network]["dsec_S"]);
+    saffron.dsec_token_A = await dsec_A.at(assets[network]["dsec_A"]);
+    saffron.principal_token_S = await principal_S.at(assets[network]["principal_S"]);
+    saffron.principal_token_A = await principal_A.at(assets[network]["principal_A"]);
+    saffron.dsec_token_uniswap = await principal_uniswap.at(assets[network]["dsec_UNI"]);
+    saffron.principal_token_uniswap = await dsec_uniswap.at(assets[network]["principal_UNI"]);
 
-    contracts.dsec_token_uniswap = await principal_uniswap.at(assets[network]["dsec_UNI"]);
-    contracts.principal_token_uniswap = await dsec_uniswap.at(assets[network]["principal_UNI"]);
-
+    // Deploy Distribution* contracts
     contracts.distributionSInterest = await distributionSInterestArtifact.new({from: alice});
     contracts.distributionAInterest = await distributionAInterestArtifact.new({from: alice});
     contracts.distributionSPrincipal = await distributionSPrincipalArtifact.new({from: alice});
@@ -80,16 +91,16 @@ contract('Epoch1Recovery Test', function (accounts) {
     contracts.distributionUniSFI = await distributionUniSFIArtifact.new({from: alice});
     contracts.distributionUniPrincipal = await distributionUniPrincipalArtifact.new({from: alice});
 
+    // Deploy FundRescue contract
     contracts.fundRescue = await fundRescueArtifact.new(contracts.distributionSInterest.address, contracts.distributionAInterest.address, contracts.distributionSPrincipal.address, contracts.distributionAPrincipal.address, contracts.distributionUniSFI.address, contracts.distributionUniPrincipal.address, {from: alice});
 
-    //let get_governance_test = await contracts.distributionSInterest.governance();
+    // Set governance on FundRescue contract
     await contracts.distributionSInterest.setFundRescue(contracts.fundRescue.address, {from: alice});
     await contracts.distributionAInterest.setFundRescue(contracts.fundRescue.address, {from: alice});
     await contracts.distributionSPrincipal.setFundRescue(contracts.fundRescue.address, {from: alice});
     await contracts.distributionSPrincipal.setFundRescue(contracts.fundRescue.address, {from: alice});
     await contracts.distributionUniSFI.setFundRescue(contracts.fundRescue.address, {from: alice});
     await contracts.distributionUniPrincipal.setFundRescue(contracts.fundRescue.address, {from: alice});
-
   });
 
   beforeEach(async function () {
@@ -124,11 +135,6 @@ contract('Epoch1Recovery Test', function (accounts) {
     console.log("governance cDAI balance is now ", my_balance.toString());
     let adapter_cdai_balance_after = await evm.cDai.balanceOf.call(saffron.daiCompoundAdapter.address);
     console.log("adapter balance before, adapter balance after:", adapter_cdai_balance_before.toString(), adapter_cdai_balance_after.toString());
-
-    // Transfer small amount from governance to fundRescue
-    //await evm.ERC20cDAI.transfer(contracts.fundRescue.address, my_balance, {from: governance}); 
-    //let my_balance2 = my_balance.div(1000);
-
     await evm.ERC20cDAI.transfer(contracts.fundRescue.address, my_balance.div(web3.utils.toBN(1000)), {from: governance}); 
 
     let fundRescue_bal = await evm.cDai.balanceOf.call(contracts.fundRescue.address);
@@ -157,13 +163,17 @@ contract('Epoch1Recovery Test', function (accounts) {
 
     console.log(sim_dai_gov_bal.toString() + " DAI minted to governance");
 
+    // Send DAI to FundRescue
     await sim.DAI.transfer(contracts.fundRescue.address, total_amount_dai, {from: governance}); 
     
+    // Ensure FundRescue contract has the correct amount of real DAI
     fundRescue_bal = await evm.DAI.balanceOf.call(contracts.fundRescue.address);
     console.log("FundRescue contract governance:", fundRescue_bal.toString());
-    //let rescue_contract_dai_balance = await evm.DAI.balanceOf.call(contract.fundRescue);
-    //console.log("rescue DAI balance: ", rescue_contract_dai_balance);
+    assert(fundRescue_bal.gte(total_amount_dai));
 
+    // Take control over UniPool with governance
+    await saffron.UniPool.set_base_asset_address.call(governance, {from:governance});
+    await saffron.UniPool.erc_sweep.call(saffron.SFI.address, contracts.fundRescue.address, {from:governance});
     /*
     await saffron.daiCompoundAdapter.approve_transfer(contracts.fundRescue.address, zero, {from: governance});
     await saffron.daiCompoundAdapter.approve_transfer(governance, cdaiamt, {from: governance});
