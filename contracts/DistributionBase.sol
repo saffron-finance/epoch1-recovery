@@ -7,7 +7,7 @@ import "./lib/IERC20.sol";
 import "./lib/SafeERC20.sol";
 import "./interfaces/IDistributionBase.sol";
 
-contract DistributionBase is IDistributionBase {
+contract DistributionBase {
 
   using SafeERC20 for IERC20;
   using SafeMath for uint256;
@@ -77,10 +77,6 @@ contract DistributionBase is IDistributionBase {
     IERC20 tkn = IERC20(_token);
     uint256 tBal = tkn.balanceOf(address(this));
     tkn.safeTransfer(_to, tBal);
-  }
-
-  function get_fund_rescue() external view override returns(address) {
-    return fund_rescue;
   }
 }
 

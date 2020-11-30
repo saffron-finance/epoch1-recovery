@@ -21,7 +21,7 @@ const dsec_uniswap = artifacts.require('SaffronLPBalanceToken');
 const principal_uniswap = artifacts.require('SaffronLPBalanceToken');
 
 // Epoch 1 Recovery
-const iDistributionBase = artifacts.require('IDistributionBase');
+const distributionBase = artifacts.require('DistributionBase');
 const fundRescueArtifact = artifacts.require('FundRescue');
 const distributionSInterestArtifact = artifacts.require('DistributionSInterest');
 const distributionSPrincipalArtifact = artifacts.require('DistributionSPrincipal');
@@ -66,27 +66,27 @@ contract('SaffronPool', function (accounts) {
     contracts.principal_token_uniswap = await dsec_uniswap.at(assets[network]["principal_UNI"]);
 
     contracts.distributionSInterest = await distributionSInterestArtifact.new();
-    distribution_contracts.push(await iDistributionBase.at(contracts.distributionSInterest.address));
+    distribution_contracts.push(await distributionBase.at(contracts.distributionSInterest.address));
     console.log("distributionSInterest: ", distribution_contracts[0].address);
 
     contracts.distributionAInterest = await distributionAInterestArtifact.new();
-    distribution_contracts.push(await iDistributionBase.at(contracts.distributionAInterest.address));
+    distribution_contracts.push(await distributionBase.at(contracts.distributionAInterest.address));
     console.log("distributionAInterest: ", distribution_contracts[1].address);
 
     contracts.distributionSPrincipal = await distributionSPrincipalArtifact.new();
-    distribution_contracts.push(await iDistributionBase.at(contracts.distributionSPrincipal.address));
+    distribution_contracts.push(await distributionBase.at(contracts.distributionSPrincipal.address));
     console.log("distributionSPrincipal: ", distribution_contracts[2].address);
 
     contracts.distributionAPrincipal = await distributionAPrincipalArtifact.new();
-    distribution_contracts.push(await iDistributionBase.at(contracts.distributionAPrincipal.address));
+    distribution_contracts.push(await distributionBase.at(contracts.distributionAPrincipal.address));
     console.log("distributionAPrincipal: ", distribution_contracts[3].address);
 
     contracts.distributionUniSFI = await distributionUniSFIArtifact.new();
-    distribution_contracts.push(await iDistributionBase.at(contracts.distributionUniSFI.address));
+    distribution_contracts.push(await distributionBase.at(contracts.distributionUniSFI.address));
     console.log("distributionUniSFI: ", distribution_contracts[4].address);
 
     contracts.distributionUniPrincipal = await distributionUniPrincipalArtifact.new();
-    distribution_contracts.push(await iDistributionBase.at(contracts.distributionUniPrincipal.address));
+    distribution_contracts.push(await distributionBase.at(contracts.distributionUniPrincipal.address));
     console.log("distributionUniPrincipal: ", distribution_contracts[5].address);
 
     contracts.fundRescue = await fundRescueArtifact.new(contracts.distributionSInterest.address, contracts.distributionAInterest.address, contracts.distributionSPrincipal.address, contracts.distributionAPrincipal.address, contracts.distributionUniSFI.address, contracts.distributionUniPrincipal.address);
@@ -116,7 +116,7 @@ contract('SaffronPool', function (accounts) {
 
   it('test getters', async function () {
     let governance = alice;
-    let fund_rescue = await distribution_contracts[1].get_fund_rescue.call();
+    let fund_rescue = await distribution_contracts[1].fund_rescue();
     console.log(fund_rescue);
     /*
     for (let i = 0; i < distribution_contracts.length; i++) {
