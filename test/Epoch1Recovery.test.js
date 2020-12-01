@@ -264,6 +264,7 @@ contract('Epoch1Recovery Test', function (accounts) {
   }
 
   async function testUserRedeem() {
+    // Allow redemptions on Distribution* contracts
     await contracts.distributionSInterest.allowRedeem({from: governance});
     await contracts.distributionSPrincipal.allowRedeem({from: governance});
     await contracts.distributionAInterest.allowRedeem({from: governance});
@@ -280,6 +281,7 @@ contract('Epoch1Recovery Test', function (accounts) {
     let aggregate_uni_dsec = ZERO_BN;
     let aggregate_uni_principal = ZERO_BN;
 
+    // Iterate through json file of snapshot to get all user addresses as of 2020-12-01
     for (const addLog of snapshot_full) {
       let user = {
         address: addLog[0],
@@ -406,6 +408,7 @@ contract('Epoch1Recovery Test', function (accounts) {
       console.log("  expected_sfi : " + expected_sfi_redemption.toString());
       assert(sfi_total_redeemed.eq(expected_sfi_redemption), "incorrect total amount redeemed");
 
+      // Add up redemptions-to-date
       aggregate_DAI_redeemed = aggregate_DAI_redeemed.add(dai_total_redeemed);
       aggregate_SFI_redeemed = aggregate_SFI_redeemed.add(sfi_total_redeemed);
       aggregate_UNI_redeemed = aggregate_UNI_redeemed.add(uni_total_redeemed);
@@ -414,6 +417,7 @@ contract('Epoch1Recovery Test', function (accounts) {
       count++;
     }
 
+    // Ensure we don't redeem too much
     assert(aggregate_DAI_redeemed.lte(DAI_TOTAL), "redeemed too much DAI");
     assert(aggregate_SFI_redeemed.lte(UNI_SFI_EARNED), "redeemed too much SFI");
     assert(aggregate_UNI_redeemed.lte(UNI_PRINCIPAL_AMOUNT), "redeemed too much SFI");
