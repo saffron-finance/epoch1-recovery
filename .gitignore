@@ -4,3 +4,4 @@ package-lock.json
 *.swp
 *.swo
 Session.vim
+.idea
