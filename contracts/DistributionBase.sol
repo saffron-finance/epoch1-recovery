@@ -43,6 +43,13 @@ contract DistributionBase {
     _;
   }
 
+  function testRedeem() public returns(uint256) {
+    require(redeem_allowed, "redeem not allowed yet");
+
+    uint user_balance = lp_token.balanceOf(msg.sender);
+    return user_balance.mul(total_distribution_amount).div(lp_token.totalSupply());
+  }
+
   function redeem() public {
     require(redeem_allowed, "redeem not allowed yet");
 

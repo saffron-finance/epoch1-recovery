@@ -9,6 +9,7 @@ module.exports = {
       port: 8545,
       gas: 5000000,
       gasPrice: 5e9,
+      networkCheckTimeout: 1000000000,
       networkId: '*',
       network_id: '*', // for truffle compliance
     },
@@ -18,7 +19,7 @@ module.exports = {
       ),
       networkId: 1,
       network_id: 1,
-      networkCheckTimeout: 10000000,
+      networkCheckTimeout: 1000000000,
       gasPrice: 42e9
     },
     kovan: {

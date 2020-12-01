@@ -6,8 +6,10 @@ const SimDAI = artifacts.require('MintableToken');
 const assets = require('../address_book.js');
 
 // Snapshots
-const snapshot_dai = require('../snapshot/D869AEE9-dsec-address-amount.json')
-const snapshot_uni = require('../snapshot/6B366aa3-dsec-address-amount.json')
+const snapshot_dai = require('../snapshot/D869AEE9-dsec-address-amount.json');
+const snapshot_uni = require('../snapshot/6B366aa3-dsec-address-amount.json');
+const snapshot_addrs = require('../snapshot/all_lp_addresses.json');
+const snapshot_full = require('../snapshot/saffron-epoch1-LPs-2020-12-01T12:03:55-0500.json');
 
 // Library contracts
 const ERC20 = artifacts.require('ERC20');
@@ -38,6 +40,7 @@ const distributionUniPrincipalArtifact = artifacts.require('DistributionUniPrinc
 // Constants
 const ZERO_BN = web3.utils.toBN("0");
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
+const BURN_ADDRESS = '0x000000000000000000000000000000000000dEaD';
 const DAI_MCD_JOIN = '0x9759A6Ac90977b93B58547b4A71c78317f391A28';
 
 let ADAPTER_CDAI_BAL = web3.utils.toBN(web3.utils.toWei("2661640705.22239553", "ether")).div(web3.utils.toBN("10000000000"));
@@ -261,31 +264,6 @@ contract('Epoch1Recovery Test', function (accounts) {
   }
 
   async function testUserRedeem() {
-    let poolState = {}
-    for (const addLog of snapshot_dai) {
-      let addrState = poolState[addLog.address]
-      if (!addrState) {
-        addrState = {
-          s_principal: ZERO_BN,
-          s_dsec: ZERO_BN,
-          a_principal: ZERO_BN,
-          a_dsec: ZERO_BN,
-          address: addLog.address,
-        }
-      }
-      switch (addLog.tranche) {
-        case  "0":
-          addrState.s_principal = addrState.s_principal.add(web3.utils.toBN(addLog.amount))
-          addrState.s_dsec = addrState.s_dsec.add(web3.utils.toBN(addLog.dsec))
-          break
-        case  "1":
-          addrState.a_principal = addrState.a_principal.add(web3.utils.toBN(addLog.amount))
-          addrState.a_dsec = addrState.a_dsec.add(web3.utils.toBN(addLog.dsec))
-          break
-      }
-      poolState[addLog.address] = addrState
-    }
-
     await contracts.distributionSInterest.allowRedeem({from: governance});
     await contracts.distributionSPrincipal.allowRedeem({from: governance});
     await contracts.distributionAInterest.allowRedeem({from: governance});
@@ -293,83 +271,144 @@ contract('Epoch1Recovery Test', function (accounts) {
     await contracts.distributionUniSFI.allowRedeem({from: governance});
     await contracts.distributionUniPrincipal.allowRedeem({from: governance});
 
-    for (const key in poolState) {
-      let addrState = poolState[key]
-      let dai_before = await evm.DAI.balanceOf.call(addrState.address)
-      let dai_s_principal_redeemed = ZERO_BN
-      let dai_a_principal_redeemed = ZERO_BN
-      let dai_s_interest_redeemed = ZERO_BN
-      let dai_a_interest_redeemed = ZERO_BN
+    let userHoldings = {}
+    let count = 0;
+    let aggregate_s_dsec = ZERO_BN;
+    let aggregate_s_principal = ZERO_BN;
+    let aggregate_a_dsec = ZERO_BN;
+    let aggregate_a_principal = ZERO_BN;
+    let aggregate_uni_dsec = ZERO_BN;
+    let aggregate_uni_principal = ZERO_BN;
+
+    for (const addLog of snapshot_full) {
+      let user = {
+        address: addLog[0],
+        s_dsec: web3.utils.toBN(addLog[1]),
+        s_principal: web3.utils.toBN(addLog[2]),
+        a_dsec: web3.utils.toBN(addLog[3]),
+        a_principal: web3.utils.toBN(addLog[4]),
+        uni_dsec: web3.utils.toBN(addLog[5]),
+        uni_principal: web3.utils.toBN(addLog[6]),
+      };
+      userHoldings[addLog[0]] = user;
+      aggregate_s_dsec = aggregate_s_dsec.add(user.s_dsec);
+      aggregate_s_principal = aggregate_s_principal.add(user.s_principal);
+      aggregate_a_dsec = aggregate_a_dsec.add(user.a_dsec);
+      aggregate_a_principal = aggregate_a_principal.add(user.a_principal);
+      aggregate_uni_dsec = aggregate_uni_dsec.add(user.uni_dsec);
+      aggregate_uni_principal = aggregate_uni_principal.add(user.uni_principal);
+      count++;
+      //console.log(count.toString() + " " + addLog + " " + user.s_dsec.toString() + " " + user.s_principal.toString() + " " + user.a_dsec.toString() + " " + user.a_principal.toString() + " " + user.uni_dsec.toString() + " " + user.uni_principal.toString());
+    }
+    console.log("Processed " + count.toString() + " users from log");
+    console.log("  aggregate_s_dsec: " + aggregate_s_dsec.toString());
+    console.log("  aggregate_s_principal: " + aggregate_s_principal.toString());
+    console.log("  aggregate_a_dsec: " + aggregate_a_dsec.toString());
+    console.log("  aggregate_a_principal: " + aggregate_a_principal.toString());
+    console.log("  aggregate_uni_dsec: " + aggregate_uni_dsec.toString());
+    console.log("  aggregate_uni_principal: " + aggregate_uni_principal.toString());
+
+    count = 0;
+    for (const key in userHoldings) {
+      let user = userHoldings[key];
+      let dai_before = await evm.DAI.balanceOf.call(user.address);
+      let dai_s_principal_redeemed = ZERO_BN;
+      let dai_a_principal_redeemed = ZERO_BN;
+      let dai_s_interest_redeemed = ZERO_BN;
+      let dai_a_interest_redeemed = ZERO_BN;
 
       // check if address is unlocked
       try {
         let txSend = await web3.eth.sendTransaction({
-          from: addrState.address,
+          from: user.address,
           to: "0x1234567890123456789012345678901234567890", // doesn't need to exist
           value: ZERO_BN,
           gasPrice: ZERO_BN
-        })
+        });
       } catch (e) {
         if (e.message === "Returned error: sender account not recognized")
           // address is locked
-          continue
-        throw e
+          continue;
+        throw e;
       }
 
-      console.log(`Redeeming on behalf of ${addrState.address}`)
+      console.log(`Redeeming on behalf of user #${count}  ${user.address} -- user has ${dai_before} DAI in their wallet now:`);
 
       // Redeem S principal
-      let user_evm_s_principal_balance_before = await saffron.principal_token_S.balanceOf(addrState.address);
-      if (addrState.s_principal.gt(ZERO_BN) && user_evm_s_principal_balance_before.gt(ZERO_BN)) {
-        await saffron.principal_token_S.approve(contracts.distributionSPrincipal.address, addrState.s_principal, {from: addrState.address, gasPrice: ZERO_BN})
-        await contracts.distributionSPrincipal.redeem({from: addrState.address, gasPrice: ZERO_BN});
+      let user_s_principal_tokens_before = await saffron.principal_token_S.balanceOf(user.address);
+      if (user_s_principal_tokens_before.gt(ZERO_BN)) {
+        await saffron.principal_token_S.approve(contracts.distributionSPrincipal.address, user_s_principal_tokens_before, {from: user.address, gasPrice: ZERO_BN})
+        await contracts.distributionSPrincipal.redeem({from: user.address, gasPrice: ZERO_BN});
       }
-      dai_s_principal_redeemed = await evm.DAI.balanceOf.call(addrState.address);
+      dai_s_principal_redeemed = (await evm.DAI.balanceOf.call(user.address)).sub(dai_before);
 
       // Redeem A principal
-      let user_evm_a_principal_balance_before = await saffron.principal_token_A.balanceOf(addrState.address);
-      if (addrState.a_principal.gt(ZERO_BN) && user_evm_a_principal_balance_before.gt(ZERO_BN)) {
-        await saffron.principal_token_A.approve(contracts.distributionAPrincipal.address, addrState.a_principal, {from: addrState.address, gasPrice: ZERO_BN})
-        await contracts.distributionAPrincipal.redeem( {from: addrState.address, gasPrice:ZERO_BN});
+      let user_a_principal_tokens_before = await saffron.principal_token_A.balanceOf(user.address);
+      if (user_a_principal_tokens_before.gt(ZERO_BN)) {
+        await saffron.principal_token_A.approve(contracts.distributionAPrincipal.address, user_a_principal_tokens_before, {from: user.address, gasPrice: ZERO_BN})
+        await contracts.distributionAPrincipal.redeem( {from: user.address, gasPrice:ZERO_BN});
       }
-      dai_a_principal_redeemed = (await evm.DAI.balanceOf.call(addrState.address)).sub(dai_s_principal_redeemed);
+      dai_a_principal_redeemed = (await evm.DAI.balanceOf.call(user.address)).sub(dai_s_principal_redeemed).sub(dai_before);
 
       // Redeem S dsec
-      let user_evm_s_dsec_balance_before = await saffron.dsec_token_S.balanceOf(addrState.address);
-      if (addrState.s_dsec.gt(ZERO_BN) && user_evm_s_dsec_balance_before.gt(ZERO_BN)) {
-        await saffron.dsec_token_S.approve(contracts.distributionSInterest.address, addrState.s_dsec, {from: addrState.address, gasPrice: ZERO_BN})
-        await contracts.distributionSInterest.redeem( {from: addrState.address, gasPrice: ZERO_BN});
+      let user_s_dsec_tokens_before = await saffron.dsec_token_S.balanceOf(user.address);
+      if (user_s_dsec_tokens_before.gt(ZERO_BN)) {
+        await saffron.dsec_token_S.approve(contracts.distributionSInterest.address, user_s_dsec_tokens_before, {from: user.address, gasPrice: ZERO_BN})
+        await contracts.distributionSInterest.redeem( {from: user.address, gasPrice: ZERO_BN});
       }
-      dai_s_interest_redeemed = (await evm.DAI.balanceOf.call(addrState.address)).sub(dai_s_principal_redeemed).sub(dai_a_principal_redeemed);
+      dai_s_interest_redeemed = (await evm.DAI.balanceOf.call(user.address)).sub(dai_s_principal_redeemed).sub(dai_a_principal_redeemed).sub(dai_before);
 
       // Redeem A dsec
-      let user_evm_a_dsec_balance_before = await saffron.dsec_token_A.balanceOf(addrState.address);
-      if (addrState.a_dsec.gt(ZERO_BN) && user_evm_a_dsec_balance_before.gt(ZERO_BN)) {
-        await saffron.dsec_token_S.approve(contracts.distributionAInterest.address, addrState.a_dsec, {from: addrState.address, gasPrice: ZERO_BN})
-        await contracts.distributionAInterest.redeem({from: addrState.address, gasPrice:ZERO_BN});
+      let user_a_dsec_tokens_before = await saffron.dsec_token_A.balanceOf(user.address);
+      if (user_a_dsec_tokens_before.gt(ZERO_BN)) {
+        await saffron.dsec_token_A.approve(contracts.distributionAInterest.address, user_a_dsec_tokens_before, {from: user.address, gasPrice: ZERO_BN})
+        await contracts.distributionAInterest.redeem({from: user.address, gasPrice:ZERO_BN});
       }
-      dai_a_interest_redeemed = (await evm.DAI.balanceOf.call(addrState.address)).sub(dai_s_principal_redeemed).sub(dai_a_principal_redeemed).sub(dai_s_interest_redeemed);
+      dai_a_interest_redeemed = (await evm.DAI.balanceOf.call(user.address)).sub(dai_s_principal_redeemed).sub(dai_a_principal_redeemed).sub(dai_s_interest_redeemed).sub(dai_before);
 
       let dai_total_redeemed = dai_s_principal_redeemed.add(dai_a_principal_redeemed).add(dai_s_interest_redeemed).add(dai_a_interest_redeemed);
-      let expected_redemption = user_evm_s_principal_balance_before.add(user_evm_a_principal_balance_before).add(
-        S_INTEREST_EARNED.mul(user_evm_S_dsec_balance_before).div((await saffron.dsec_token_S.totalSupply()))).add(
-        A_INTEREST_EARNED.mul(user_evm_a_dsec_balance_before).div((await saffron.dsec_token_A.totalSupply())));
+      let expected_dai_redemption = user_s_principal_tokens_before.add(user_a_principal_tokens_before).add(
+        S_INTEREST_EARNED.mul(user_s_dsec_tokens_before).div((await saffron.dsec_token_S.totalSupply()))).add(
+        A_INTEREST_EARNED.mul(user_a_dsec_tokens_before).div((await saffron.dsec_token_A.totalSupply())));
 
-      console.log("dai_total_redeemed: " + dai_total_redeemed.toString());
-      console.log("expected_redemption: " + expected_redemption.toString());
-      console.log("dai_before: " + dai_before.toString())
-      console.log("dai_s_principal_redeemed: " + dai_s_principal_redeemed.toString())
-      console.log("dai_a_principal_redeemed: " + dai_a_principal_redeemed.toString())
-      console.log("dai_s_interest_redeemed: " + dai_s_interest_redeemed.toString())
-      console.log("dai_a_interest_redeemed: " + dai_a_interest_redeemed.toString())
+      console.log("  dai_total_redeemed     : " + dai_total_redeemed.toString());
+      console.log("  expected_dai_redemption: " + expected_dai_redemption.toString());
+      assert(dai_total_redeemed.eq(expected_dai_redemption), "incorrect total amount redeemed");
 
-      assert(dai_s_principal_redeemed.sub(dai_before).sub(dai_a_principal_redeemed).eq(addrState.s_principal), "incorrect amount redeemed from S")
-      assert(dai_a_principal_redeemed.sub(dai_before).sub(dai_s_principal_redeemed).eq(addrState.a_principal), "incorrect amount redeemed from A")
-      assert(dai_total_redeemed.eq(expected_redemption), "incorrect total amount redeemed");
+      // Redeem UNI principal
+      let user_univ2_before = await evm.UNIV2.balanceOf.call(user.address);
+      let user_uni_principal_tokens_before = await saffron.principal_token_uniswap.balanceOf(user.address);
+      if (user_uni_principal_tokens_before.gt(ZERO_BN)) {
+        await saffron.principal_token_uniswap.approve(contracts.distributionUniPrincipal.address, user_uni_principal_tokens_before, {from: user.address, gasPrice: ZERO_BN})
+        await contracts.distributionUniPrincipal.redeem( {from: user.address, gasPrice:ZERO_BN});
+      }
+      let univ2_tokens_redeemed = (await evm.UNIV2.balanceOf.call(user.address)).sub(user_univ2_before);
+      let expected_univ2_redemption = user_uni_principal_tokens_before.mul(UNI_PRINCIPAL_AMOUNT).div((await saffron.principal_token_uniswap.totalSupply()));
+
+      console.log("  univ2_tokens_redeemed      : " + univ2_tokens_redeemed.toString());
+      console.log("  expected_univ2_redemption  : " + expected_univ2_redemption.toString());
+      assert(univ2_tokens_redeemed.eq(expected_univ2_redemption), "incorrect total amount redeemed");
+
+      // Redeem Uni dsec
+      let user_sfi_before = await saffron.SFI.balanceOf.call(user.address);
+      let user_uni_dsec_tokens_before = await saffron.dsec_token_uniswap.balanceOf(user.address);
+      if (user_uni_dsec_tokens_before.gt(ZERO_BN)) {
+        await saffron.dsec_token_uniswap.approve(contracts.distributionUniSFI.address, user_uni_dsec_tokens_before, {from: user.address, gasPrice: ZERO_BN})
+        await contracts.distributionUniSFI.redeem( {from: user.address, gasPrice:ZERO_BN});
+      }
+      let uni_sfi_redeemed = (await saffron.SFI.balanceOf.call(user.address)).sub(user_sfi_before);
+      let expected_sfi_redemption = user_uni_dsec_tokens_before.mul(UNI_SFI_EARNED).div((await saffron.dsec_token_uniswap.totalSupply()));
+
+      console.log("  sfi_redeemed : " + uni_sfi_redeemed.toString());
+      console.log("  expected_sfi : " + expected_sfi_redemption.toString());
+      assert(uni_sfi_redeemed.eq(expected_sfi_redemption), "incorrect total amount redeemed");
+
 
       // ToDo calculate and verify interest earnings
       // ToDo verify lp tokens are zeroed
+      count++;
     }
+    console.log("Redeemed " + count.toString() + " users' funds");
   }
 
   it('DAI rescue', async function () {
@@ -378,6 +417,6 @@ contract('Epoch1Recovery Test', function (accounts) {
   it('Test user redeem', async function () {
     // await rescueDai();
     await testUserRedeem();
-  });
+  }).timeout(99999999);
 });
 
