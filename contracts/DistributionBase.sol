@@ -59,7 +59,7 @@ contract DistributionBase {
   }
 
   modifier onlyFundRescue() {
-    require(msg.sender == fund_rescue || msg.sender == governance, "only fund rescue or governance is allowed");
+    require(msg.sender == fund_rescue, "only fund rescue");
     _;
   }
 
