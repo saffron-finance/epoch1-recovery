@@ -35,14 +35,22 @@ const distributionUniPrincipalArtifact = artifacts.require('DistributionUniPrinc
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 const DAI_MCD_JOIN = '0x9759A6Ac90977b93B58547b4A71c78317f391A28';
 
+let ADAPTER_CDAI_BAL = web3.utils.toBN(web3.utils.toWei("2661640705.22239553", "ether"));
+let S_INTEREST_EARNED = web3.utils.toBN("38577996099131004531621");
+let S_PRINCIPAL_AMOUNT = web3.utils.toBN("51029966983206580100000000");
+let A_INTEREST_EARNED = web3.utils.toBN("47795853357341105935610");
+let A_PRINCIPAL_AMOUNT = web3.utils.toBN("4239020891056530000000000");
+let DAI_TOTAL = S_INTEREST_EARNED.add(S_PRINCIPAL_AMOUNT).add(A_INTEREST_EARNED).add(A_PRINCIPAL_AMOUNT);
+
+let UNI_SFI_EARNED = web3.utils.toBN("3750000000000000000000");
+let UNI_PRINCIPAL_AMOUNT = web3.utils.toBN("4217195425373693533612");
+
+
 contract('Epoch1Recovery Test', function (accounts) {
 
   let network = 'development'
 
   let governance = assets[network]["TEAM"];
-  let alice = accounts[0];
-  let snapshotIdTest;
-  let snapshotIdPrimary;
 
   let contracts = {};
   let saffron = {};
@@ -101,12 +109,6 @@ contract('Epoch1Recovery Test', function (accounts) {
       + contracts.distributionUniPrincipal.address + " DistributionUniPrincipal contract");
 
     // Check LP token addresses match expected values
-    assert((await contracts.distributionSInterest.lp_token_address()).toString()    == "0x372Bc201134676c846F1fd07a2a059Fd18526De3", "distributionSInterest.lp_token_address() does not match expected value");
-    assert((await contracts.distributionSPrincipal.lp_token_address()).toString()   == "0x9be973b1496E28b3b745742391B0E5977184f1AC", "distributionSPrincipal.lp_token_address() does not match expected value");
-    assert((await contracts.distributionAInterest.lp_token_address()).toString()    == "0x28DcafcbF29A502B33a719d726B0E723A73b6AD3", "distributionAInterest.lp_token_address() does not match expected value");
-    assert((await contracts.distributionAPrincipal.lp_token_address()).toString()   == "0x8364Cf2bc1504e05EfEd9b92Ee903b642B6f3Fb5", "distributionAPrincipal.lp_token_address() does not match expected value");
-    assert((await contracts.distributionUniSFI.lp_token_address()).toString()       == "0x19e5a60c1646c921aC592409548d1bCe5B071Faa", "distributionUniSFI.lp_token_address() does not match expected value");
-    assert((await contracts.distributionUniPrincipal.lp_token_address()).toString() == "0x87c4a23A15E2442422E5e43d08cEEF7D1F32792d", "distributionUniPrincipal.lp_token_address() does not match expected value");
     console.log("Distribution* contracts deployed with LP token values:\n  " +
       (await contracts.distributionSInterest.lp_token_address()).toString()    + " 0x372Bc201134676c846F1fd07a2a059Fd18526De3 s_dsec\n  " +
       (await contracts.distributionSPrincipal.lp_token_address()).toString()   + " 0x9be973b1496E28b3b745742391B0E5977184f1AC s_principal\n  " +
@@ -114,18 +116,18 @@ contract('Epoch1Recovery Test', function (accounts) {
       (await contracts.distributionAPrincipal.lp_token_address()).toString()   + " 0x8364Cf2bc1504e05EfEd9b92Ee903b642B6f3Fb5 a_principal\n  " +
       (await contracts.distributionUniSFI.lp_token_address()).toString()       + " 0x19e5a60c1646c921aC592409548d1bCe5B071Faa uni_sfi\n  " +
       (await contracts.distributionUniPrincipal.lp_token_address()).toString() + " 0x87c4a23A15E2442422E5e43d08cEEF7D1F32792d uni_principal");
+    assert((await contracts.distributionSInterest.lp_token_address()).toString()    === "0x372Bc201134676c846F1fd07a2a059Fd18526De3", "distributionSInterest.lp_token_address() does not match expected value");
+    assert((await contracts.distributionSPrincipal.lp_token_address()).toString()   === "0x9be973b1496E28b3b745742391B0E5977184f1AC", "distributionSPrincipal.lp_token_address() does not match expected value");
+    assert((await contracts.distributionAInterest.lp_token_address()).toString()    === "0x28DcafcbF29A502B33a719d726B0E723A73b6AD3", "distributionAInterest.lp_token_address() does not match expected value");
+    assert((await contracts.distributionAPrincipal.lp_token_address()).toString()   === "0x8364Cf2bc1504e05EfEd9b92Ee903b642B6f3Fb5", "distributionAPrincipal.lp_token_address() does not match expected value");
+    assert((await contracts.distributionUniSFI.lp_token_address()).toString()       === "0x19e5a60c1646c921aC592409548d1bCe5B071Faa", "distributionUniSFI.lp_token_address() does not match expected value");
+    assert((await contracts.distributionUniPrincipal.lp_token_address()).toString() === "0x87c4a23A15E2442422E5e43d08cEEF7D1F32792d", "distributionUniPrincipal.lp_token_address() does not match expected value");
 
     // Deploy FundRescue contract 
     contracts.fundRescue = await fundRescueArtifact.new(contracts.distributionSInterest.address, contracts.distributionSPrincipal.address, contracts.distributionAInterest.address, contracts.distributionAPrincipal.address, contracts.distributionUniSFI.address, contracts.distributionUniPrincipal.address, {from: governance});
 
     // Verify FundRescue contract has the correct values for each Distribution* contract
     console.log("FundRescue contract deployed:\n  " + contracts.fundRescue.address + " FundRescue contract");
-    assert((await contracts.fundRescue.distribution_contract_s_dsec()).toString() == contracts.distributionSInterest.address, "ERROR: distribution contract address mismatch in FundRescue");
-    assert((await contracts.fundRescue.distribution_contract_s_principal()).toString() == contracts.distributionSPrincipal.address, "ERROR: distribution contract address mismatch in FundRescue");
-    assert((await contracts.fundRescue.distribution_contract_a_dsec()).toString() == contracts.distributionAInterest.address, "ERROR: distribution contract address mismatch in FundRescue");
-    assert((await contracts.fundRescue.distribution_contract_a_principal()).toString() == contracts.distributionAPrincipal.address, "ERROR: distribution contract address mismatch in FundRescue");
-    assert((await contracts.fundRescue.distribution_contract_uni_sfi()).toString() == contracts.distributionUniSFI.address, "ERROR: distribution contract address mismatch in FundRescue");
-    assert((await contracts.fundRescue.distribution_contract_uni_principal()).toString() == contracts.distributionUniPrincipal.address, "ERROR: distribution contract address mismatch in FundRescue");
     console.log("FundRescue contract deployed with LP token values:\n  " +
       (await contracts.fundRescue.distribution_contract_s_dsec()).toString()        + " s_dsec\n  " +
       (await contracts.fundRescue.distribution_contract_s_principal()).toString()   + " s_principal\n  " +
@@ -133,6 +135,12 @@ contract('Epoch1Recovery Test', function (accounts) {
       (await contracts.fundRescue.distribution_contract_a_principal()).toString()   + " a_principal\n  " +
       (await contracts.fundRescue.distribution_contract_uni_sfi()).toString()       + " uni_sfi\n  " +
       (await contracts.fundRescue.distribution_contract_uni_principal()).toString() + " uni_principal");
+    assert((await contracts.fundRescue.distribution_contract_s_dsec()).toString() === contracts.distributionSInterest.address, "ERROR: distribution contract address mismatch in FundRescue");
+    assert((await contracts.fundRescue.distribution_contract_s_principal()).toString() === contracts.distributionSPrincipal.address, "ERROR: distribution contract address mismatch in FundRescue");
+    assert((await contracts.fundRescue.distribution_contract_a_dsec()).toString() === contracts.distributionAInterest.address, "ERROR: distribution contract address mismatch in FundRescue");
+    assert((await contracts.fundRescue.distribution_contract_a_principal()).toString() === contracts.distributionAPrincipal.address, "ERROR: distribution contract address mismatch in FundRescue");
+    assert((await contracts.fundRescue.distribution_contract_uni_sfi()).toString() === contracts.distributionUniSFI.address, "ERROR: distribution contract address mismatch in FundRescue");
+    assert((await contracts.fundRescue.distribution_contract_uni_principal()).toString() === contracts.distributionUniPrincipal.address, "ERROR: distribution contract address mismatch in FundRescue");
 
     // Set governance on FundRescue contract
     await contracts.distributionSInterest.setFundRescue(contracts.fundRescue.address, {from: governance});
@@ -142,12 +150,6 @@ contract('Epoch1Recovery Test', function (accounts) {
     await contracts.distributionUniSFI.setFundRescue(contracts.fundRescue.address, {from: governance});
     await contracts.distributionUniPrincipal.setFundRescue(contracts.fundRescue.address, {from: governance});
 
-    assert((await contracts.distributionSInterest.fund_rescue()).toString() == contracts.fundRescue.address, "ERROR: distributionSInterest fund_rescue address does not match FundRescue contract address");
-    assert((await contracts.distributionSPrincipal.fund_rescue()).toString() == contracts.fundRescue.address, "ERROR: distributionSPrincipal fund_rescue address does not match FundRescue contract address");
-    assert((await contracts.distributionAInterest.fund_rescue()).toString() == contracts.fundRescue.address, "ERROR: distributionAInterest fund_rescue address does not match FundRescue contract address");
-    assert((await contracts.distributionAPrincipal.fund_rescue()).toString() == contracts.fundRescue.address, "ERROR: distributionAPrincipal fund_rescue address does not match FundRescue contract address");
-    assert((await contracts.distributionUniSFI.fund_rescue()).toString() == contracts.fundRescue.address, "ERROR: distributionUniSFI fund_rescue address does not match FundRescue contract address");
-    assert((await contracts.distributionUniPrincipal.fund_rescue()).toString() == contracts.fundRescue.address, "ERROR: distributionUniPrincipal fund_rescue address does not match FundRescue contract address");
     console.log("Distribution* contracts deployed with FundRescue contract address set:\n  " +
       (await contracts.distributionSInterest.fund_rescue()).toString()    + " distributionSInterest\n  " +
       (await contracts.distributionSPrincipal.fund_rescue()).toString()   + " distributionSPrincipal\n  " +
@@ -155,24 +157,22 @@ contract('Epoch1Recovery Test', function (accounts) {
       (await contracts.distributionAPrincipal.fund_rescue()).toString()   + " distributionAPrincipal\n  " +
       (await contracts.distributionUniSFI.fund_rescue()).toString()       + " distributionUniSFI\n  " +
       (await contracts.distributionUniPrincipal.fund_rescue()).toString() + " distributionUniPrincipal");
+    assert((await contracts.distributionSInterest.fund_rescue()).toString() === contracts.fundRescue.address, "ERROR: distributionSInterest fund_rescue address does not match FundRescue contract address");
+    assert((await contracts.distributionSPrincipal.fund_rescue()).toString() === contracts.fundRescue.address, "ERROR: distributionSPrincipal fund_rescue address does not match FundRescue contract address");
+    assert((await contracts.distributionAInterest.fund_rescue()).toString() === contracts.fundRescue.address, "ERROR: distributionAInterest fund_rescue address does not match FundRescue contract address");
+    assert((await contracts.distributionAPrincipal.fund_rescue()).toString() === contracts.fundRescue.address, "ERROR: distributionAPrincipal fund_rescue address does not match FundRescue contract address");
+    assert((await contracts.distributionUniSFI.fund_rescue()).toString() === contracts.fundRescue.address, "ERROR: distributionUniSFI fund_rescue address does not match FundRescue contract address");
+    assert((await contracts.distributionUniPrincipal.fund_rescue()).toString() === contracts.fundRescue.address, "ERROR: distributionUniPrincipal fund_rescue address does not match FundRescue contract address");
 
   });
 
   async function rescueDai() {
     console.log("Execute cDAI sweep from Saffron Epoch 1 DAI/Compound adapter:");
     let adapter_cdai_balance_before = await evm.cDai.balanceOf.call(saffron.daiCompoundAdapter.address);
-    let S_INTEREST_EARNED = web3.utils.toBN("38577996099131004531621");
-    let S_PRINCIPAL_AMOUNT = web3.utils.toBN("51029966983206580100000000");
-    let A_INTEREST_EARNED = web3.utils.toBN("47795853357341105935610");
-    let A_PRINCIPAL_AMOUNT = web3.utils.toBN("4239020891056530000000000");
-    let UNI_SFI_EARNED = web3.utils.toBN("3750000000000000000000"); 
-    let UNI_PRINCIPAL_AMOUNT = web3.utils.toBN("4217195425373693533612");
-    let DAI_EXPECTED = S_INTEREST_EARNED.add(S_PRINCIPAL_AMOUNT).add(A_INTEREST_EARNED).add(A_PRINCIPAL_AMOUNT);
 
     // Set base asset on adapter to cDAI
     await saffron.daiCompoundAdapter.set_base_asset(assets[network]["cDAI"], {from: governance});
 
-    let zero = web3.utils.toBN(0);
     // Approve transfer from adapter to governance
     await saffron.daiCompoundAdapter.approve_transfer(governance, adapter_cdai_balance_before, {from: governance});
     console.log("  1. DAI/Compound Adapter approve_transfer complete");
@@ -180,8 +180,8 @@ contract('Epoch1Recovery Test', function (accounts) {
     // Transfer cDAI to governance
     await evm.ERC20cDAI.transferFrom(saffron.daiCompoundAdapter.address, governance, adapter_cdai_balance_before, {from: governance});
     let gov_balance = await evm.cDai.balanceOf.call(governance);
-    assert(gov_balance.gt(web3.utils.toBN(1000)), "Governance cDAI balance is too low after transferFrom");
-    console.log("  2. Transfered cDAI to governance, governance cDAI balance is now", gov_balance.toString());
+    assert(gov_balance.gte(ADAPTER_CDAI_BAL), "Governance cDAI balance is too low after transferFrom");
+    console.log("  2. Transferred cDAI to governance, governance cDAI balance is now", gov_balance.toString());
 
     let adapter_cdai_balance_after = await evm.cDai.balanceOf.call(saffron.daiCompoundAdapter.address);
     assert(adapter_cdai_balance_before.gt(adapter_cdai_balance_after), "ERROR: Adapter balance was not reduced after transferFrom");
@@ -191,8 +191,8 @@ contract('Epoch1Recovery Test', function (accounts) {
     await evm.ERC20cDAI.transfer(contracts.fundRescue.address, gov_balance, {from: governance}); 
     let fundRescue_bal_after = await evm.cDai.balanceOf.call(contracts.fundRescue.address);
     let fundRescue_gov = await contracts.fundRescue.governance();
-    assert(fundRescue_gov.toString() == governance, "ERROR: FundRescue contract governance does not match expected value");
-    assert(fundRescue_bal_after.gt(fundRescue_bal_before), "ERROR: FundRescue contract governance does not match expected value");
+    assert(fundRescue_gov.toString() === governance, "ERROR: FundRescue contract governance does not match expected value");
+    assert(fundRescue_bal_after.eq(fundRescue_bal_before.add(gov_balance)), "ERROR: FundRescue contract governance does not match expected value");
     console.log("  4. cDAI transferred to FundRescue contract, cDAI balance after transfer:", fundRescue_bal_after.toString());
     console.log("  5. FundRescue contract governance set:", fundRescue_gov.toString());
 
@@ -200,14 +200,14 @@ contract('Epoch1Recovery Test', function (accounts) {
       // Call redeemDai to change cDAI to DAI
       await expectRevert(contracts.fundRescue.redeemDai.call({from: governance}), 'revert');
       // Mint test DAI
-      await sim.DAI.mint(governance, DAI_EXPECTED, {from: DAI_MCD_JOIN, gasPrice: web3.utils.toHex(0)});
+      await sim.DAI.mint(governance, DAI_TOTAL, {from: DAI_MCD_JOIN, gasPrice: web3.utils.toHex(0)});
 
       // Get governance DAI balance
       let dai_gov_bal = await evm.DAI.balanceOf.call(governance);
-      assert(dai_gov_bal.gt(DAI_EXPECTED));
-      console.log("  6. [Development] DAI mint: " + DAI_EXPECTED.toString() + " DAI minted to governance");
+      assert(dai_gov_bal.gt(DAI_TOTAL));
+      console.log("  6. [Development] DAI mint: " + DAI_TOTAL.toString() + " DAI minted to governance");
       // Send DAI to FundRescue
-      await sim.DAI.transfer(contracts.fundRescue.address, DAI_EXPECTED, {from: governance}); 
+      await sim.DAI.transfer(contracts.fundRescue.address, DAI_TOTAL, {from: governance});
     } else {
       // Call redeemDai to change cDAI to DAI
       await contracts.fundRescue.redeemDai.call({from: governance});
@@ -215,27 +215,26 @@ contract('Epoch1Recovery Test', function (accounts) {
     }
 
     // Ensure FundRescue contract has the correct amount of real DAI
-    fundRescue_bal = await evm.DAI.balanceOf.call(contracts.fundRescue.address);
-    assert(fundRescue_bal.gte(DAI_EXPECTED));
-    console.log("  7. Verified FundRescue contract has enough DAI to cover the " + DAI_EXPECTED.toString() + " DAI needed for recovery. FundRescue DAI balance:", fundRescue_bal.toString());
+    let fundRescue_bal = await evm.DAI.balanceOf.call(contracts.fundRescue.address);
+    assert(fundRescue_bal.gte(DAI_TOTAL));
+    console.log("  7. Verified FundRescue contract has enough DAI to cover the " + DAI_TOTAL.toString() + " DAI needed for recovery. FundRescue DAI balance:", fundRescue_bal.toString());
 
     console.log("Execute SFI & UNIV2 sweep from Saffron Epoch 1 Uniswap LP Pool:");
 
     // Set base asset address on UniPool with governance so we can sweep
     await saffron.UniPool.set_base_asset_address(governance, {from:governance});
-    assert((await saffron.UniPool.base_asset_address()).toString() == governance, "ERROR: UniPool.base_asset_address() does not match expected value");
+    assert((await saffron.UniPool.base_asset_address()).toString() === governance, "ERROR: UniPool.base_asset_address() does not match expected value");
     console.log("  1. Pool base_asset_address was set to something other than SFI/ETH UNIV2 token address.");
 
     // Sweep SFI tokens from pool
-    let SFI_EXPECTED = web3.utils.toBN("3750000000000000000000");
     await saffron.UniPool.erc_sweep(saffron.SFI.address, contracts.fundRescue.address, {from:governance});
-    assert((await saffron.SFI.balanceOf(contracts.fundRescue.address)).gte(SFI_EXPECTED));
+    assert((await saffron.SFI.balanceOf(contracts.fundRescue.address)).gte(UNI_SFI_EARNED));
     console.log("  2. Pool's SFI tokens swept into the FundRescue contract.");
 
     // Sweep SFI/ETH UNIV2 tokens from pool
     let UNIV2_EXPECTED = web3.utils.toBN("4217195425373693533612");
     await saffron.UniPool.erc_sweep(evm.UNIV2.address, contracts.fundRescue.address, {from:governance});
-    assert((await evm.UNIV2.balanceOf(contracts.fundRescue.address)).gte(SFI_EXPECTED));
+    assert((await evm.UNIV2.balanceOf(contracts.fundRescue.address)).gte(UNIV2_EXPECTED));
     console.log("  3. Pool's UNIV2 tokens swept into the FundRescue contract.");
 
     // FundRescue contract: approve and transfer funds to distribution contracts
@@ -262,7 +261,7 @@ contract('Epoch1Recovery Test', function (accounts) {
     await rescueDai();
   });
   it('Test user redeem', async function () {
-    await rescueDai();
+    // await rescueDai();
     await testUserRedeem();
   });
 });
