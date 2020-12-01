@@ -9,7 +9,7 @@ const assets = require('../address_book.js');
 const snapshot_dai = require('../snapshot/D869AEE9-dsec-address-amount.json');
 const snapshot_uni = require('../snapshot/6B366aa3-dsec-address-amount.json');
 const snapshot_addrs = require('../snapshot/all_lp_addresses.json');
-const snapshot_full = require('../snapshot/saffron-epoch1-LPs-2020-12-01T12:03:55-0500.json');
+const snapshot_full = require('../snapshot/saffron-epoch1-LPs-2020-12-01T12_03_55-0500.json');
 
 // Library contracts
 const ERC20 = artifacts.require('ERC20');
@@ -131,7 +131,7 @@ contract('Epoch1Recovery Test', function (accounts) {
     assert((await contracts.distributionUniSFI.lp_token_address()).toString() === "0x19e5a60c1646c921aC592409548d1bCe5B071Faa", "distributionUniSFI.lp_token_address() does not match expected value");
     assert((await contracts.distributionUniPrincipal.lp_token_address()).toString() === "0x87c4a23A15E2442422E5e43d08cEEF7D1F32792d", "distributionUniPrincipal.lp_token_address() does not match expected value");
 
-    // Deploy FundRescue contract 
+    // Deploy FundRescue contract
     contracts.fundRescue = await fundRescueArtifact.new(contracts.distributionSInterest.address, contracts.distributionSPrincipal.address, contracts.distributionAInterest.address, contracts.distributionAPrincipal.address, contracts.distributionUniSFI.address, contracts.distributionUniPrincipal.address, {from: governance});
 
     // Verify FundRescue contract has the correct values for each Distribution* contract
@@ -346,6 +346,8 @@ contract('Epoch1Recovery Test', function (accounts) {
         await contracts.distributionSPrincipal.redeem({from: user.address, gasPrice: ZERO_BN});
       }
       dai_s_principal_redeemed = (await evm.DAI.balanceOf.call(user.address)).sub(dai_before);
+      let user_s_principal_tokens_after = await saffron.principal_token_S.balanceOf(user.address);
+      assert(user_s_principal_tokens_after.eq(ZERO_BN), "not all s principal redeemed")
 
       // Redeem A principal
       let user_a_principal_tokens_before = await saffron.principal_token_A.balanceOf(user.address);
@@ -354,6 +356,8 @@ contract('Epoch1Recovery Test', function (accounts) {
         await contracts.distributionAPrincipal.redeem( {from: user.address, gasPrice:ZERO_BN});
       }
       dai_a_principal_redeemed = (await evm.DAI.balanceOf.call(user.address)).sub(dai_s_principal_redeemed).sub(dai_before);
+      let user_a_principal_tokens_after = await saffron.principal_token_A.balanceOf(user.address);
+      assert(user_a_principal_tokens_after.eq(ZERO_BN), "not all a principal redeemed")
 
       // Redeem S dsec
       let user_s_dsec_tokens_before = await saffron.dsec_token_S.balanceOf(user.address);
@@ -362,6 +366,8 @@ contract('Epoch1Recovery Test', function (accounts) {
         await contracts.distributionSInterest.redeem( {from: user.address, gasPrice: ZERO_BN});
       }
       dai_s_interest_redeemed = (await evm.DAI.balanceOf.call(user.address)).sub(dai_s_principal_redeemed).sub(dai_a_principal_redeemed).sub(dai_before);
+      let user_s_dsec_tokens_after = await saffron.dsec_token_S.balanceOf(user.address);
+      assert(user_s_dsec_tokens_after.eq(ZERO_BN), "not all s dsec redeemed")
 
       // Redeem A dsec
       let user_a_dsec_tokens_before = await saffron.dsec_token_A.balanceOf(user.address);
@@ -370,6 +376,8 @@ contract('Epoch1Recovery Test', function (accounts) {
         await contracts.distributionAInterest.redeem({from: user.address, gasPrice:ZERO_BN});
       }
       dai_a_interest_redeemed = (await evm.DAI.balanceOf.call(user.address)).sub(dai_s_principal_redeemed).sub(dai_a_principal_redeemed).sub(dai_s_interest_redeemed).sub(dai_before);
+      let user_a_dsec_tokens_after = await saffron.dsec_token_A.balanceOf(user.address);
+      assert(user_a_dsec_tokens_after.eq(ZERO_BN), "not all a dsec redeemed")
 
       let dai_total_redeemed = dai_s_principal_redeemed.add(dai_a_principal_redeemed).add(dai_s_interest_redeemed).add(dai_a_interest_redeemed);
       let expected_dai_redemption = user_s_principal_tokens_before.add(user_a_principal_tokens_before).add(
@@ -389,6 +397,8 @@ contract('Epoch1Recovery Test', function (accounts) {
       }
       let uni_total_redeemed = (await evm.UNIV2.balanceOf.call(user.address)).sub(user_univ2_before);
       let expected_univ2_redemption = user_uni_principal_tokens_before.mul(UNI_PRINCIPAL_AMOUNT).div((await saffron.principal_token_uniswap.totalSupply()));
+      let user_uni_principal_tokens_after = await saffron.principal_token_uniswap.balanceOf(user.address);
+      assert(user_uni_principal_tokens_after.eq(ZERO_BN), "not all uni redeemed")
 
       console.log("  uni_total_redeemed      : " + uni_total_redeemed.toString());
       console.log("  expected_uni_redemption : " + expected_univ2_redemption.toString());
@@ -403,6 +413,8 @@ contract('Epoch1Recovery Test', function (accounts) {
       }
       let sfi_total_redeemed = (await saffron.SFI.balanceOf.call(user.address)).sub(user_sfi_before);
       let expected_sfi_redemption = user_uni_dsec_tokens_before.mul(UNI_SFI_EARNED).div((await saffron.dsec_token_uniswap.totalSupply()));
+      let user_sfi_after = await saffron.dsec_token_uniswap.balanceOf(user.address);
+      assert(user_sfi_after.eq(ZERO_BN), "not all sfi redeemed")
 
       console.log("  sfi_redeemed : " + sfi_total_redeemed.toString());
       console.log("  expected_sfi : " + expected_sfi_redemption.toString());
@@ -413,7 +425,6 @@ contract('Epoch1Recovery Test', function (accounts) {
       aggregate_SFI_redeemed = aggregate_SFI_redeemed.add(sfi_total_redeemed);
       aggregate_UNI_redeemed = aggregate_UNI_redeemed.add(uni_total_redeemed);
 
-      // ToDo verify lp tokens are zeroed
       count++;
     }
 
