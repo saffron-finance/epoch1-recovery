@@ -309,6 +309,9 @@ contract('Epoch1Recovery Test', function (accounts) {
     console.log("  aggregate_uni_principal: " + aggregate_uni_principal.toString());
 
     count = 0;
+    let aggregate_DAI_redeemed = ZERO_BN;
+    let aggregate_SFI_redeemed = ZERO_BN;
+    let aggregate_UNI_redeemed = ZERO_BN;
     for (const key in userHoldings) {
       let user = userHoldings[key];
       let dai_before = await evm.DAI.balanceOf.call(user.address);
@@ -382,12 +385,12 @@ contract('Epoch1Recovery Test', function (accounts) {
         await saffron.principal_token_uniswap.approve(contracts.distributionUniPrincipal.address, user_uni_principal_tokens_before, {from: user.address, gasPrice: ZERO_BN})
         await contracts.distributionUniPrincipal.redeem( {from: user.address, gasPrice:ZERO_BN});
       }
-      let univ2_tokens_redeemed = (await evm.UNIV2.balanceOf.call(user.address)).sub(user_univ2_before);
+      let uni_total_redeemed = (await evm.UNIV2.balanceOf.call(user.address)).sub(user_univ2_before);
       let expected_univ2_redemption = user_uni_principal_tokens_before.mul(UNI_PRINCIPAL_AMOUNT).div((await saffron.principal_token_uniswap.totalSupply()));
 
-      console.log("  univ2_tokens_redeemed      : " + univ2_tokens_redeemed.toString());
-      console.log("  expected_univ2_redemption  : " + expected_univ2_redemption.toString());
-      assert(univ2_tokens_redeemed.eq(expected_univ2_redemption), "incorrect total amount redeemed");
+      console.log("  uni_total_redeemed      : " + uni_total_redeemed.toString());
+      console.log("  expected_uni_redemption : " + expected_univ2_redemption.toString());
+      assert(uni_total_redeemed.eq(expected_univ2_redemption), "incorrect total amount redeemed");
 
       // Redeem Uni dsec
       let user_sfi_before = await saffron.SFI.balanceOf.call(user.address);
@@ -396,19 +399,28 @@ contract('Epoch1Recovery Test', function (accounts) {
         await saffron.dsec_token_uniswap.approve(contracts.distributionUniSFI.address, user_uni_dsec_tokens_before, {from: user.address, gasPrice: ZERO_BN})
         await contracts.distributionUniSFI.redeem( {from: user.address, gasPrice:ZERO_BN});
       }
-      let uni_sfi_redeemed = (await saffron.SFI.balanceOf.call(user.address)).sub(user_sfi_before);
+      let sfi_total_redeemed = (await saffron.SFI.balanceOf.call(user.address)).sub(user_sfi_before);
       let expected_sfi_redemption = user_uni_dsec_tokens_before.mul(UNI_SFI_EARNED).div((await saffron.dsec_token_uniswap.totalSupply()));
 
-      console.log("  sfi_redeemed : " + uni_sfi_redeemed.toString());
+      console.log("  sfi_redeemed : " + sfi_total_redeemed.toString());
       console.log("  expected_sfi : " + expected_sfi_redemption.toString());
-      assert(uni_sfi_redeemed.eq(expected_sfi_redemption), "incorrect total amount redeemed");
+      assert(sfi_total_redeemed.eq(expected_sfi_redemption), "incorrect total amount redeemed");
 
+      aggregate_DAI_redeemed = aggregate_DAI_redeemed.add(dai_total_redeemed);
+      aggregate_SFI_redeemed = aggregate_SFI_redeemed.add(sfi_total_redeemed);
+      aggregate_UNI_redeemed = aggregate_UNI_redeemed.add(uni_total_redeemed);
 
-      // ToDo calculate and verify interest earnings
       // ToDo verify lp tokens are zeroed
       count++;
     }
+
+    assert(aggregate_DAI_redeemed.lte(DAI_TOTAL), "redeemed too much DAI");
+    assert(aggregate_SFI_redeemed.lte(UNI_SFI_EARNED), "redeemed too much SFI");
+    assert(aggregate_UNI_redeemed.lte(UNI_PRINCIPAL_AMOUNT), "redeemed too much SFI");
     console.log("Redeemed " + count.toString() + " users' funds");
+    console.log("  " + aggregate_DAI_redeemed.toString() + " / " + DAI_TOTAL.toString() + " DAI");
+    console.log("  " + aggregate_SFI_redeemed.toString() + " / " + UNI_SFI_EARNED.toString() + " SFI");
+    console.log("  " + aggregate_UNI_redeemed.toString() + " / " + UNI_PRINCIPAL_AMOUNT.toString() + " UNIV2");
   }
 
   it('DAI rescue', async function () {
