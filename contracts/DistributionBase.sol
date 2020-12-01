@@ -59,7 +59,7 @@ contract DistributionBase {
   }
 
   modifier onlyFundRescue() {
-    require(msg.sender == fund_rescue, "only fund rescue is allowed");
+    require(msg.sender == fund_rescue, "only fund rescue or governance is allowed");
     _;
   }
 
@@ -69,7 +69,7 @@ contract DistributionBase {
   }
 
   function depositFund() public onlyFundRescue {
-    underlying_token.safeTransferFrom(msg.sender, address(this), total_distribution_amount);
+    underlying_token.safeTransferFrom(fund_rescue, address(this), total_distribution_amount);
     deposit_done = true;
   }
 
