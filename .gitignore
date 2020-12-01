@@ -5,3 +5,4 @@ package-lock.json
 *.swo
 Session.vim
 build
+.idea
