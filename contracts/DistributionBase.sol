@@ -5,7 +5,6 @@ pragma solidity ^0.7.1;
 import "./lib/SafeMath.sol";
 import "./lib/IERC20.sol";
 import "./lib/SafeERC20.sol";
-import "./interfaces/IDistributionBase.sol";
 
 contract DistributionBase {
 
@@ -22,7 +21,7 @@ contract DistributionBase {
   IERC20 public underlying_token;
   IERC20 public lp_token;
 
-  uint256 public total_distribution_amount;
+  uint public total_distribution_amount;
 
   constructor(address _underlying_token, address _lp_token, uint _total_distribution_amount) {
     require(_total_distribution_amount > 0);
@@ -43,19 +42,14 @@ contract DistributionBase {
     _;
   }
 
-  function testRedeem() public returns(uint256) {
-    require(redeem_allowed, "redeem not allowed yet");
-
-    uint user_balance = lp_token.balanceOf(msg.sender);
-    return user_balance.mul(total_distribution_amount).div(lp_token.totalSupply());
-  }
-
+  event Redeem(address sender, uint balance, address token, uint share);
   function redeem() public {
     require(redeem_allowed, "redeem not allowed yet");
 
     uint user_balance = lp_token.balanceOf(msg.sender);
     uint user_share = user_balance.mul(total_distribution_amount).div(lp_token.totalSupply());
 
+    emit Redeem(msg.sender, user_balance, address(lp_token), user_share);
     lp_token.safeTransferFrom(msg.sender, 0x000000000000000000000000000000000000dEaD, user_balance);
     underlying_token.safeTransfer(msg.sender, user_share);
   }
@@ -82,7 +76,7 @@ contract DistributionBase {
 
   function erc_sweep(address _token, address _to) public onlyGovernance {
     IERC20 tkn = IERC20(_token);
-    uint256 tBal = tkn.balanceOf(address(this));
+    uint tBal = tkn.balanceOf(address(this));
     tkn.safeTransfer(_to, tBal);
   }
 }

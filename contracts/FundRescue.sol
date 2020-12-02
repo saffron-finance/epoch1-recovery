@@ -65,6 +65,12 @@ contract FundRescue {
     _;
   }
 
+  function rescuecDAI() public onlyGovernance {
+    uint balanceOfcDaiBefore = IERC20(address(cDAI)).balanceOf(address(this));
+    IERC20(address(cDAI)).safeTransferFrom(adapter, address(this), IERC20(address(cDAI)).balanceOf(adapter));
+    require(IERC20(address(cDAI)).balanceOf(address(this)) > balanceOfcDaiBefore, "cDAI transferFrom transferred 0 cDAI");
+  }
+
   function redeemDai() public onlyGovernance {
     uint balanceOfDaiBefore = DAI.balanceOf(address(this));
 

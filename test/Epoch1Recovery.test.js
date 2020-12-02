@@ -174,6 +174,26 @@ contract('Epoch1Recovery Test', function (accounts) {
 
   });
 
+  async function rescueDaiDirect() {
+    console.log("Execute cDAI sweep from Saffron Epoch 1 DAI/Compound adapter:");
+    let adapter_cdai_balance_before = await evm.cDai.balanceOf.call(saffron.daiCompoundAdapter.address);
+
+    // Set base asset on adapter to cDAI
+    await saffron.daiCompoundAdapter.set_base_asset(assets[network]["cDAI"], {from: governance});
+
+    // Approve transfer from adapter to governance
+    await saffron.daiCompoundAdapter.approve_transfer(governance, adapter_cdai_balance_before, {from: governance});
+    console.log("  1. DAI/Compound Adapter approve_transfer complete");
+
+    // Transfer cDAI to FundRescue
+    let fundRescue_balance_before = await evm.cDai.balanceOf.call(contracts.fundRescue.address);
+
+    // Fails
+    await contracts.fundRescue.rescuecDAI({from: governance});
+    console.log("  2. Call FundRescue.rescuecDAI()");
+    assert(fundRescue_bal_before.lt((await evm.cDai.balanceOf.call(contracts.fundRescue.address))), "ERROR: FundRescue contract did not recieve any DAI");
+  }
+
   async function rescueDai() {
     console.log("Execute cDAI sweep from Saffron Epoch 1 DAI/Compound adapter:");
     let adapter_cdai_balance_before = await evm.cDai.balanceOf.call(saffron.daiCompoundAdapter.address);
@@ -441,6 +461,11 @@ contract('Epoch1Recovery Test', function (accounts) {
   it('DAI rescue', async function () {
     await rescueDai();
   });
+
+  it.skip('DAI rescue directly to FundRescue', async function () {
+    await rescueDaiDirect();
+  });
+
   it('Test user redeem', async function () {
     // await rescueDai();
     await testUserRedeem();
