@@ -21,6 +21,7 @@
     "const-name-snakecase": "off",
     "event-name-camelcase": "warn",
     "reason-string": "off",
-    "max-states-count": "off"
+    "max-states-count": "off",
+    "no-empty-blocks": "off"
   }
 }
