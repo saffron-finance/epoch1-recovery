@@ -12,7 +12,7 @@ const DAI = artifacts.require('ERC20');
 const DAI_Compound_Adapter_artifact = artifacts.require('DAI_Compound_Adapter');
 
 // Saffron
-const DAI_Compound_Adapter = artifacts.require('ISaffronAdapter');
+const ISaffronAdapter = artifacts.require('ISaffronAdapter');
 const SaffronUniswapLPPool = artifacts.require('SaffronUniswapLPPool');
 
 const dsec_S = artifacts.require('SaffronLPBalanceToken');
@@ -63,8 +63,24 @@ module.exports = async function(deployer, network, accounts) {
   let governance = accounts[0];
   let mock = {};
   let contracts = {};
-  mock.DAI_Compound_Adapter = await DAI_Compound_Adapter_artifact.new(accounts[0], assets[network]["cDAI"], assets[network]["DAI"], {from: governance});
-  console.log("Deployed mock DAI_Compound_Adapter at " + mock.DAI_Compound_Adapter.address);
+  let evm = {};
+
+  evm.DAI = await DAI.at(assets[network]["DAI"]);
+  evm.cDai = await ICErc20.at(assets[network]["cDAI"]);
+  evm.ERC20cDAI = await ERC20.at(assets[network]["cDAI"]);
+  evm.DAI_Compound_Adapter = await ISaffronAdapter.at(assets[network]["DAI_Compound_Adapter"]);
+
+  console.log("GOVERNANCE: " + governance);
+  let cdai_gov_balance = await evm.ERC20cDAI.balanceOf.call(governance);
+
+  if (network == 'mainnet-fork' || network == 'development') {
+    process.stdout.write("Deploying mock DAI_Compound_Adapter... ");
+    mock.DAI_Compound_Adapter = await DAI_Compound_Adapter_artifact.new(accounts[0], assets[network]["cDAI"], assets[network]["DAI"], {from: governance});
+    console.log("deployed at " + mock.DAI_Compound_Adapter.address);
+    await evm.ERC20cDAI.transfer(mock.DAI_Compound_Adapter.address, cdai_gov_balance, {from: governance});
+    console.log("cDAI transfer to mock DAI_Compound_Adapter complete\n");
+    evm.DAI_Compound_Adapter = mock.DAI_Compound_Adapter;
+  }
 
   // Deploy Distribution* contracts
   contracts.distributionSInterest = await distributionSInterestArtifact.new({from: governance, gas: 1900000});
@@ -87,9 +103,10 @@ module.exports = async function(deployer, network, accounts) {
     (await contracts.distributionSPrincipal.lp_token_address()).toString() + " 0x9be973b1496E28b3b745742391B0E5977184f1AC s_principal\n  " +
     (await contracts.distributionAInterest.lp_token_address()).toString() + " 0x28DcafcbF29A502B33a719d726B0E723A73b6AD3 a_dsec\n  " +
     (await contracts.distributionAPrincipal.lp_token_address()).toString() + " 0x8364Cf2bc1504e05EfEd9b92Ee903b642B6f3Fb5 a_principal\n  " +
-    (await contracts.distributionUniSFI.lp_token_address()).toString() + " 0x19e5a60c1646c921aC592409548d1bCe5B071Faa uni_sfi\n  " +
+    (await contracts.distributionUniSFI.lp_token_address()).toString() + " 0x19e5a60c1646c921aC592409548d1bCe5B071Faa uni_dsec\n  " +
     (await contracts.distributionUniPrincipal.lp_token_address()).toString() + " 0x87c4a23A15E2442422E5e43d08cEEF7D1F32792d uni_principal");
-  await wait(12500);
+  console.log("\nNext: deploy FundRescue with above addresses");
+  //await wait(12500);
   
 
   // Deploy FundRescue contract
@@ -104,7 +121,8 @@ module.exports = async function(deployer, network, accounts) {
     (await contracts.fundRescue.distribution_contract_a_principal()).toString() + " a_principal\n  " +
     (await contracts.fundRescue.distribution_contract_uni_sfi()).toString() + " uni_sfi\n  " +
     (await contracts.fundRescue.distribution_contract_uni_principal()).toString() + " uni_principal");
-  await wait(20000);
+  console.log("\nNext: set FundRescue contract address as FundRescue in Distribution* contracts");
+  //await wait(20000);
 
   // Set governance on FundRescue contract
   await contracts.distributionSInterest.setFundRescue(contracts.fundRescue.address, {from: governance, gas: 200000});
@@ -121,6 +139,69 @@ module.exports = async function(deployer, network, accounts) {
     (await contracts.distributionAPrincipal.fund_rescue()).toString() + " distributionAPrincipal\n  " +
     (await contracts.distributionUniSFI.fund_rescue()).toString() + " distributionUniSFI\n  " +
     (await contracts.distributionUniPrincipal.fund_rescue()).toString() + " distributionUniPrincipal");
-  await wait(9000);
 
+  // Set base asset on adapter to cDAI
+  await evm.DAI_Compound_Adapter.set_base_asset(assets[network]["cDAI"], {from: governance});
+  console.log("DAI_Compound_Adapter set_base_asset(" + assets[network]["cDAI"] + ") called");
+
+  process.stdout.write("\nCalling approve_transfer on DAI_Compound_Adapter... ");
+  // Run approve_transfer(governance, amount) on DAI_Compound_Adapter
+  let adapter_cdai_balance_before = await evm.ERC20cDAI.balanceOf.call(evm.DAI_Compound_Adapter.address);
+  await evm.DAI_Compound_Adapter.approve_transfer(governance, adapter_cdai_balance_before, {from: governance});
+  console.log("done");
+
+  console.log("\nNext: transfer entire balance of cDAI from adapter " + evm.DAI_Compound_Adapter.address + " to governance " + governance);
+  //await wait(31000);
+  //
+  // Transfer cDAI from adapter to governance
+  console.log("adapter_cdai_balance_before: " + adapter_cdai_balance_before.toString());
+  await evm.ERC20cDAI.transferFrom(mock.DAI_Compound_Adapter.address, governance, adapter_cdai_balance_before, {from: governance});
+  console.log("cDAI transfer from adapter to governance complete.");
+  cdai_gov_balance = await evm.ERC20cDAI.balanceOf.call(governance);
+  console.log("cDAI gov balance: " + cdai_gov_balance.toString());
+  
+  console.log("\nNext: transfer entire balance of cDAI from governance to FundRescue");
+  //await wait(31000);
+  let dai_gov_balance = await evm.DAI.balanceOf.call(governance);
+  await evm.ERC20cDAI.transfer(contracts.fundRescue.address, cdai_gov_balance, {from: governance});
+  console.log("cDAI transfer complete.");
+  console.log("FundRescue cDAI balance after transfer: " + (await evm.ERC20cDAI.balanceOf.call(contracts.fundRescue.address)).toString());
+
+  //await wait(11000);
+
+  if (network == 'mainnet-fork' || network == 'development') {
+    console.log("\nNext: test erc_sweep for DAI and cDAI");
+    let dai_test_transfer = dai_gov_balance.div(web3.utils.toBN(7));
+
+    await evm.DAI.transfer(contracts.fundRescue.address, dai_test_transfer, {from: governance});
+    await evm.DAI.transfer(contracts.distributionSInterest.address, dai_test_transfer, {from: governance, gas: 200000});
+    await evm.DAI.transfer(contracts.distributionSPrincipal.address, dai_test_transfer, {from: governance, gas: 200000});
+    await evm.DAI.transfer(contracts.distributionAInterest.address, dai_test_transfer, {from: governance, gas: 200000});
+    await evm.DAI.transfer(contracts.distributionAPrincipal.address, dai_test_transfer, {from: governance, gas: 200000});
+    await evm.DAI.transfer(contracts.distributionUniSFI.address, dai_test_transfer, {from: governance, gas: 200000});
+    await evm.DAI.transfer(contracts.distributionUniPrincipal.address, dai_test_transfer, {from: governance, gas: 200000});
+
+    console.log("DAI transfer complete.");
+
+    console.log("FundRescue DAI balance after transfer: " + (await evm.DAI.balanceOf.call(contracts.fundRescue.address)).toString());
+    console.log("distributionSInterest DAI balance after transfer: " + (await evm.DAI.balanceOf.call(contracts.distributionSInterest.address)).toString());
+    console.log("distributionSPrincipal DAI balance after transfer: " + (await evm.DAI.balanceOf.call(contracts.distributionSPrincipal.address)).toString());
+    console.log("distributionAInterest DAI balance after transfer: " + (await evm.DAI.balanceOf.call(contracts.distributionAInterest.address)).toString());
+    console.log("distributionAPrincipal DAI balance after transfer: " + (await evm.DAI.balanceOf.call(contracts.distributionAPrincipal.address)).toString());
+    console.log("distributionUniSFI DAI balance after transfer: " + (await evm.DAI.balanceOf.call(contracts.distributionUniSFI.address)).toString());
+    console.log("distributionUniPrincipal DAI balance after transfer: " + (await evm.DAI.balanceOf.call(contracts.distributionUniPrincipal.address)).toString());
+
+    console.log("Test erc_sweep on every contract");
+    // Test sweep
+    await contracts.fundRescue.erc_sweep(assets[network]["cDAI"], governance);
+    console.log("erc_sweep(cDAI, governance) complete. cDAI gov balance: " + (await evm.ERC20cDAI.balanceOf.call(governance)));
+    await contracts.fundRescue.erc_sweep(assets[network]["DAI"], governance);
+    await contracts.distributionSInterest.erc_sweep(assets[network]["DAI"], governance);
+    await contracts.distributionSPrincipal.erc_sweep(assets[network]["DAI"], governance);
+    await contracts.distributionAInterest.erc_sweep(assets[network]["DAI"], governance);
+    await contracts.distributionAPrincipal.erc_sweep(assets[network]["DAI"], governance);
+    await contracts.distributionUniSFI.erc_sweep(assets[network]["DAI"], governance);
+    await contracts.distributionUniPrincipal.erc_sweep(assets[network]["DAI"], governance);
+    console.log("erc_sweep(DAI, governance) complete. DAI gov balance: " + (await evm.DAI.balanceOf.call(governance)));
+  }
 };

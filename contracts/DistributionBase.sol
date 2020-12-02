@@ -59,6 +59,10 @@ contract DistributionBase {
     redeem_allowed = true;
   }
 
+  function disallowRedeem() public onlyGovernance {
+    redeem_allowed = false;
+  }
+
   modifier onlyFundRescue() {
     require(msg.sender == fund_rescue, "only fund rescue");
     _;
